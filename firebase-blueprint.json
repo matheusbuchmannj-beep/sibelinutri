@@ -1,0 +1,115 @@
+{
+  "entities": {
+    "Settings": {
+      "title": "Configurações Globais",
+      "description": "Configurações da marca, contatos e visual do site.",
+      "type": "object",
+      "properties": {
+        "personUrl": { "type": "string" },
+        "brandName": { "type": "string" },
+        "whatsappNumber": { "type": "string" },
+        "instagramUrl": { "type": "string" },
+        "linkedinUrl": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "bgUrl": { "type": "string" },
+        "heroTitle": { "type": "string" },
+        "heroSubtitle": { "type": "string" },
+        "plansTitle": { "type": "string" },
+        "plansSubtitle": { "type": "string" },
+        "crn": { "type": "string" }
+      }
+    },
+    "Local": {
+      "title": "Local de Atendimento",
+      "description": "Consultórios ou locais físicos.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "address": { "type": "string" },
+        "mapsLink": { "type": "string" }
+      },
+      "required": ["id", "name"]
+    },
+    "Plano": {
+      "title": "Plano de Serviço",
+      "description": "Modalidades de consulta ou planos de acompanhamento.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "titulo": { "type": "string" },
+        "descricao": { "type": "string" },
+        "preco": { "type": "string" },
+        "duracao": { "type": "string" }
+      },
+      "required": ["id", "titulo"]
+    },
+    "Horario": {
+      "title": "Disponibilidade de Horário",
+      "description": "Sessões disponíveis por data e local.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "localId": { "type": "string" },
+        "slots": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "Booking": {
+      "title": "Agendamento",
+      "description": "Reserva de consulta feita pelo paciente.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "patientName": { "type": "string" },
+        "patientWhatsapp": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "type": { "type": "string" },
+        "localId": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "planoId": { "type": "string" }
+      }
+    },
+    "Alimento": {
+      "title": "Alimento",
+      "description": "Item nutricional para dietas.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "calories": { "type": "number" },
+        "protein": { "type": "number" },
+        "carbs": { "type": "number" },
+        "fat": { "type": "number" },
+        "unit": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "config/settings": {
+      "schema": "Settings",
+      "description": "Documento único de configurações."
+    },
+    "locais/{localId}": {
+      "schema": "Local",
+      "description": "Coleção de locais físicos."
+    },
+    "planos/{planoId}": {
+      "schema": "Plano",
+      "description": "Coleção de planos de serviço."
+    },
+    "horarios/{horarioId}": {
+      "schema": "Horario",
+      "description": "Coleção de disponibilidade (ID costuma ser date_localId)."
+    },
+    "agendamentos/{bookingId}": {
+      "schema": "Booking",
+      "description": "Coleção de agendamentos realizados."
+    },
+    "alimentos/{alimentoId}": {
+      "schema": "Alimento",
+      "description": "Base de dados de alimentos."
+    }
+  }
+}

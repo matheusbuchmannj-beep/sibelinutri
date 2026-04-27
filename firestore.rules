@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Auth helpers
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { 
+      return isSignedIn() && (
+        request.auth.token.email == 'jmatheusbuchmann@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+
+    // Settings
+    match /config/settings {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Dietas (needed for patient diet view)
+    match /dietas/{dietaId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidId(dietaId);
+    }
+
+    // Locais
+    match /locais/{localId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidId(localId);
+    }
+
+    // Planos
+    match /planos/{planoId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidId(planoId);
+    }
+
+    // Horários
+    match /horarios/{horarioId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidId(horarioId);
+    }
+
+    // Alimentos
+    match /alimentos/{alimentoId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin() && isValidId(alimentoId);
+    }
+
+    // Agendamentos
+    match /agendamentos/{bookingId} {
+      function isValidBooking(data) {
+        return data.patientName is string && data.patientName.size() <= 100 &&
+               data.patientWhatsapp is string && data.patientWhatsapp.size() <= 30 &&
+               data.date is string && data.time is string &&
+               data.createdAt is string;
+      }
+
+      allow read: if isAdmin();
+      allow create: if isValidId(bookingId) && isValidBooking(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+    
+    // Admin list
+    match /admins/{userId} {
+      allow read: if isAdmin();
+      allow write: if false; // Only manageable via console or functions
+    }
+  }
+}

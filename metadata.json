@@ -1,0 +1,6 @@
+{
+  "name": "Agenda Nutri Pro",
+  "description": "Sistema completo de agendamento para nutricionistas com dashboard administrativo, gestão de pacientes, integração com WhatsApp e calendários.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
