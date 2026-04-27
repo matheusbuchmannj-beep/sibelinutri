@@ -56,20 +56,35 @@ export default function Overview() {
     }
   };
 
-  const handleDeleteBooking = async (booking: Booking) => {
-    if (!confirm(`Tem certeza que deseja excluir o agendamento de ${booking.patientName}?`)) return;
-    
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [bookingToDelete, setBookingToDelete] = useState<Booking | null>(null);
+
+  const confirmDelete = async () => {
+    if (!bookingToDelete) return;
+    setIsDeleting(true);
     try {
-      await deleteAgendamento(booking.id || '', booking.date, booking.time);
-      alert('Agendamento excluído!');
-      if (selectedBooking?.id === booking.id) {
-        setIsEditing(false);
+      console.log('Attempting to delete booking:', bookingToDelete.id);
+      const result = await deleteAgendamento(bookingToDelete.id || '', bookingToDelete.date, bookingToDelete.time);
+      if (result.ok) {
+        alert('Agendamento excluído com sucesso!');
+        if (selectedBooking?.id === bookingToDelete.id) {
+          setIsEditing(false);
+        }
+        setBookingToDelete(null);
+        await loadBookings();
+      } else {
+        alert('Não foi possível excluir o agendamento. Verifique suas permissões.');
       }
-      loadBookings();
     } catch (e) {
       console.error('Delete error:', e);
-      alert('Erro ao excluir agendamento.');
+      alert('Erro técnico ao excluir agendamento. Verifique o console.');
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const handleDeleteBooking = (booking: Booking) => {
+    setBookingToDelete(booking);
   };
 
   const stats = [
@@ -192,6 +207,50 @@ export default function Overview() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {bookingToDelete && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setBookingToDelete(null)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-sm bg-white rounded-[3rem] shadow-2xl p-10 text-center space-y-6"
+            >
+              <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto">
+                <Trash2 className="w-10 h-10" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black text-slate-800">Cuidado!</h3>
+                <p className="text-slate-500 mt-2">Deseja realmente excluir o agendamento de <span className="font-bold text-slate-800">{bookingToDelete.patientName}</span>?</p>
+              </div>
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => setBookingToDelete(null)}
+                  className="flex-1 py-4 bg-slate-50 text-slate-500 rounded-2xl font-bold uppercase tracking-widest hover:bg-slate-100 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                  className="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold uppercase tracking-widest shadow-lg shadow-red-200 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {isDeleting ? 'Excluindo...' : 'Sim, Excluir'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Edit Modal */}
       <AnimatePresence>
