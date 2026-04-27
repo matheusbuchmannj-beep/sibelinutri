@@ -66,7 +66,7 @@ export default function PatientDiet() {
           <Utensils className="w-10 h-10 text-slate-200" />
         </div>
         <h2 className="text-2xl font-black text-slate-800 tracking-tight">Plano Não Encontrado</h2>
-        <p className="text-sm font-medium leading-relaxed">Verifique se o link está correto ou peça um novo para seu profissional.</p>
+        <p className="text-sm font-medium leading-relaxed">Verifique se o link está correto ou peça um novo para sua nutricionista.</p>
       </div>
     </div>
   );
@@ -219,11 +219,12 @@ export default function PatientDiet() {
         {/* Botão de WhatsApp Flutuante ou Fixo */}
         <div className="pt-10">
           <a 
-            href={`https://wa.me/${settings?.whatsappNumber || '5547984778043'}?text=Olá, estou seguindo o plano ${dieta.titulo}!`}
+            href={`https://wa.me/${(settings?.whatsappNumber || '5547984778043').replace(/\D/g, '')}?text=Olá, estou seguindo o plano ${dieta.titulo}!`}
             target="_blank"
+            rel="noreferrer"
             className="block w-full py-6 bg-[#869471] text-white rounded-[2rem] font-black shadow-2xl shadow-[#869471]/30 text-center uppercase tracking-[0.2em] text-xs hover:scale-[1.02] active:scale-95 transition-all"
           >
-            Falar com Profissional
+            Falar com Nutricionista
           </a>
         </div>
       </div>

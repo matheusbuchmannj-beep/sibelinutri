@@ -158,6 +158,7 @@ export default function Home() {
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'link'>('pix');
 
   const [isBooking, setIsBooking] = useState(false);
+  const [lastBookingUrl, setLastBookingUrl] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -262,7 +263,12 @@ export default function Home() {
         message = `Olá! Requisitei um agendamento no site:\n\n👤 *Paciente:* ${formData.name}\n📅 *Data:* ${format(new Date(selectedDate + 'T12:00:00'), 'dd/MM/yyyy')}\n⏰ *Hora:* ${selectedTime}\n💼 *Plano:* ${selectedPlan?.name || 'Consulta Avulsa'}\n📍 *Local:* ${mode === 'online' ? 'Online' : (selectedLocal?.name || 'Presencial')}\n💳 *Pagamento:* ${paymentMethod === 'pix' ? 'PIX' : 'Link de Pagamento'}\n\nAguardo a confirmação e os dados para pagamento.`;
       }
       
-      window.open(`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(message)}`, '_blank');
+      const sanitizedPhone = settings.whatsappNumber.replace(/\D/g, '');
+      const whatsappUrl = `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(message)}`;
+      setLastBookingUrl(whatsappUrl);
+      
+      // Attempt immediate open (may be blocked by popup blockers after async await)
+      window.open(whatsappUrl, '_blank');
       
       // Scroll to top and show success
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -341,7 +347,7 @@ export default function Home() {
                 </button>
 
                 <a 
-                  href="https://wa.me/5547984778043"
+                  href={`https://wa.me/${settings.whatsappNumber.replace(/\D/g, '')}`}
                   target="_blank"
                   rel="noreferrer"
                   className="w-full bg-white border border-slate-100 p-6 rounded-[2rem] shadow-sm hover:shadow-md hover:border-[#25D366] transition-all flex items-center justify-center gap-3"
@@ -807,7 +813,7 @@ export default function Home() {
                               <h2 className="font-display text-4xl">{isUp2You ? 'Consulte os horários disponíveis no WhatsApp' : 'Finalizar e Agendar'}</h2>
                               <p className="text-slate-500 mt-2 text-sm">
                                 {isUp2You 
-                                  ? 'Preencha seus dados para consultar os horários disponíveis diretamente com o profissional.' 
+                                  ? 'Preencha seus dados para consultar os horários disponíveis diretamente com a nutricionista.' 
                                   : 'Preencha seus dados para finalizarmos sua solicitação.'}
                               </p>
                            </div>
@@ -906,6 +912,21 @@ export default function Home() {
                           <p className="text-slate-500 leading-relaxed px-10">
                             Seu agendamento foi registrado. Agora basta aguardar a confirmação da nutricionista via WhatsApp.
                           </p>
+                          {lastBookingUrl && (
+                            <div className="pt-4">
+                              <a 
+                                href={lastBookingUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-3 py-5 px-10 bg-[#25D366] text-white rounded-[2rem] font-bold text-xs uppercase tracking-widest shadow-xl shadow-green-100 hover:scale-105 transition-transform"
+                              >
+                                <MessageCircle className="w-5 h-5 fill-white" /> Abrir WhatsApp novamente ↗
+                              </a>
+                              <p className="text-[10px] text-slate-400 mt-4 uppercase font-bold tracking-widest">
+                                Clique caso a janela não tenha aberto automaticamente
+                              </p>
+                            </div>
+                          )}
                         </div>
                         <button 
                           onClick={() => setView('start')}
