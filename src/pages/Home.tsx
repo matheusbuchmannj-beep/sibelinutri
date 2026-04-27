@@ -11,7 +11,7 @@ import { format, addDays, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
   fetchSettings, fetchLocais, fetchHorarios, saveAgendamento, 
-  fetchAgendamentos 
+  fetchOccupiedSlots 
 } from '../lib/googleWorkspace';
 import { Settings, Local, Booking } from '../types';
 
@@ -145,7 +145,7 @@ export default function Home() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [locais, setLocais] = useState<Local[]>([]);
   const [availability, setAvailability] = useState<Record<string, Record<string, string[]>>>({});
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [occupiedSlots, setOccupiedSlots] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Booking Flow State
@@ -162,16 +162,16 @@ export default function Home() {
   useEffect(() => {
     async function init() {
       try {
-        const [s, l, h, b] = await Promise.all([
+        const [s, l, h, os] = await Promise.all([
           fetchSettings(),
           fetchLocais(),
           fetchHorarios(),
-          fetchAgendamentos()
+          fetchOccupiedSlots()
         ]);
         setSettings(s);
         setLocais(l);
         setAvailability(h);
-        setBookings(b);
+        setOccupiedSlots(os);
       } catch (e) {
         console.error('Failed to load site data', e);
       } finally {
@@ -182,7 +182,7 @@ export default function Home() {
   }, []);
 
   const isSlotBooked = (date: string, time: string) => {
-    return bookings.some(b => b.date === date && b.time === time && b.status !== 'Cancelado');
+    return occupiedSlots.some(s => s.date === date && s.time === time && s.status !== 'Cancelado');
   };
 
   const getSlotsForDate = (date: string, localId: string) => {

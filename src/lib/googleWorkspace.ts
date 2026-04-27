@@ -105,11 +105,28 @@ export async function fetchDietas(): Promise<Dieta[]> {
 
 export async function saveAgendamento(booking: Booking) {
   const id = booking.id || Math.random().toString(36).substr(2, 9);
-  return setDoc(doc(db, 'agendamentos', id), { ...booking, id });
+  
+  // Save the full booking (private)
+  await setDoc(doc(db, 'agendamentos', id), { ...booking, id });
+  
+  // Save the occupied slot (public)
+  const slotId = `${booking.date}_${booking.time}`;
+  await setDoc(doc(db, 'slots_occupied', slotId), {
+    date: booking.date,
+    time: booking.time,
+    status: booking.status,
+    bookingId: id
+  });
+
+  return { ok: true };
 }
 
 export async function fetchAgendamentos(): Promise<Booking[]> {
   return getCollection<Booking>('agendamentos');
+}
+
+export async function fetchOccupiedSlots(): Promise<any[]> {
+  return getCollection<any>('slots_occupied');
 }
 
 // Replacement for updateSheetData to maintain compatibility

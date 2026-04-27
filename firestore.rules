@@ -55,17 +55,23 @@ service cloud.firestore {
       allow write: if isAdmin() && isValidId(alimentoId);
     }
 
-    // Agendamentos
+    // Agendamentos (Restricted to admins to protect PII)
     match /agendamentos/{bookingId} {
       function isValidBooking(data) {
         return data.patientName is string && data.patientName.size() <= 100 &&
-               data.patientWhatsapp is string && data.patientWhatsapp.size() <= 30 &&
-               data.date is string && data.time is string &&
-               data.createdAt is string;
+               data.whatsapp is string && data.whatsapp.size() <= 30 &&
+               data.date is string && data.time is string;
       }
 
       allow read: if isAdmin();
       allow create: if isValidId(bookingId) && isValidBooking(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    // Slots Occupied (Public for availability checking)
+    match /slots_occupied/{slotId} {
+      allow read: if true;
+      allow create: if true; // Any visitor booking needs to create an occupied slot
       allow update, delete: if isAdmin();
     }
     
