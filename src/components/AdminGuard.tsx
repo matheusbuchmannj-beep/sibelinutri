@@ -17,12 +17,23 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
   }, []);
 
   const handleLogin = async () => {
+    if (isLoggingIn) return;
     setIsLoggingIn(true);
     try {
+      console.log('Starting Google Login...');
       await loginWithGoogle();
-    } catch (error) {
-      console.error('Login error:', error);
-      alert('Não foi possível abrir a janela de login. Verifique se o seu navegador está bloqueando popups.');
+    } catch (error: any) {
+      console.error('Login error details:', error);
+      // More descriptive error for common issues
+      if (error.code === 'auth/popup-blocked') {
+        alert('O popup de login foi bloqueado pelo seu navegador. Por favor, autorize popups para este site e tente novamente.');
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        // Just ignore if user closed it
+      } else if (error.code === 'auth/unauthorized-domain') {
+        alert('Este domínio não está autorizado no Firebase. Adicione '+ window.location.hostname + ' na lista de domínios autorizados do Firebase Console.');
+      } else {
+        alert('Erro ao entrar com Google: ' + (error.message || 'Erro desconhecido'));
+      }
     } finally {
       setIsLoggingIn(false);
     }

@@ -4,7 +4,7 @@
  */
 
 import { Settings, Local, Booking, Alimento, Dieta, Plano } from '../types';
-import { db, saveDocument, getCollection, subscribeToCollection, subscribeToDocument } from './firebase';
+import { db, saveDocument, getCollection, subscribeToCollection, subscribeToDocument, OperationType, handleFirestoreError } from './firebase';
 import { doc, setDoc, getDoc, collection, getDocs, query, where, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 
 // Default values for initial setup
@@ -136,6 +136,57 @@ export async function saveAgendamento(booking: Booking) {
 
 export async function fetchAgendamentos(): Promise<Booking[]> {
   return getCollection<Booking>('agendamentos');
+}
+
+export async function updateAgendamento(booking: Booking) {
+  if (!booking.id) return { ok: false };
+  try {
+    const docRef = doc(db, 'agendamentos', booking.id);
+    await updateDoc(docRef, booking as any);
+    
+    // Also update slot status if it exists
+    const slotId = `${booking.date}_${booking.time}`;
+    const slotRef = doc(db, 'slots_occupied', slotId);
+    try {
+      const slotSnap = await getDoc(slotRef);
+      if (slotSnap.exists() && slotSnap.data().bookingId === booking.id) {
+        await updateDoc(slotRef, { status: booking.status });
+      }
+    } catch (e) {
+      console.warn('Slot update failed:', e);
+    }
+
+    return { ok: true };
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, `agendamentos/${booking.id}`);
+    return { ok: false };
+  }
+}
+
+export async function deleteAgendamento(bookingId: string, date?: string, time?: string) {
+  try {
+    // Delete the booking
+    await deleteDoc(doc(db, 'agendamentos', bookingId));
+    
+    // Delete the slot if info provided
+    if (date && time) {
+      const slotId = `${date}_${time}`;
+      try {
+        const slotRef = doc(db, 'slots_occupied', slotId);
+        const slotSnap = await getDoc(slotRef);
+        if (slotSnap.exists() && slotSnap.data().bookingId === bookingId) {
+          await deleteDoc(slotRef);
+        }
+      } catch (e) {
+        console.warn('Slot delete failed:', e);
+      }
+    }
+
+    return { ok: true };
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, `agendamentos/${bookingId}`);
+    return { ok: false };
+  }
 }
 
 export async function fetchOccupiedSlots(): Promise<any[]> {

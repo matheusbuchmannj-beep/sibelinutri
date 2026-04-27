@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { fetchAgendamentos, updateSheetData, fetchSettings } from '../../lib/googleWorkspace';
+import { fetchAgendamentos, updateAgendamento, deleteAgendamento, fetchSettings } from '../../lib/googleWorkspace';
 import { Booking, Settings as NutriSettings } from '../../types';
 import { 
   Users, 
@@ -12,7 +12,8 @@ import {
   Send,
   Sparkles,
   Bot,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn, formatWhatsAppMessage } from '../../lib/utils';
@@ -43,28 +44,31 @@ export default function Overview() {
     if (!selectedBooking) return;
     setUpdating(true);
     try {
-      const row = [
-        selectedBooking.patientName,
-        selectedBooking.whatsapp,
-        selectedBooking.date,
-        selectedBooking.time,
-        selectedBooking.type,
-        selectedBooking.localId || '',
-        '', // column G
-        selectedBooking.planoId || '',
-        selectedBooking.status,
-        selectedBooking.createdAt
-      ];
-
-      await updateSheetData(`Agendamentos!A${selectedBooking.id}:J${selectedBooking.id}`, [row]);
+      await updateAgendamento(selectedBooking);
       alert('Agendamento atualizado!');
       setIsEditing(false);
       loadBookings();
     } catch (e) {
       console.error('Update error:', e);
-      alert('Erro ao atualizar no Google Sheets.');
+      alert('Erro ao atualizar agendamento.');
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleDeleteBooking = async (booking: Booking) => {
+    if (!confirm(`Tem certeza que deseja excluir o agendamento de ${booking.patientName}?`)) return;
+    
+    try {
+      await deleteAgendamento(booking.id || '', booking.date, booking.time);
+      alert('Agendamento excluído!');
+      if (selectedBooking?.id === booking.id) {
+        setIsEditing(false);
+      }
+      loadBookings();
+    } catch (e) {
+      console.error('Delete error:', e);
+      alert('Erro ao excluir agendamento.');
     }
   };
 
@@ -167,6 +171,13 @@ export default function Overview() {
                        >
                           <MessageCircle className="w-5 h-5" />
                        </button>
+                       <button 
+                        onClick={() => handleDeleteBooking(booking)}
+                        className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-500 hover:text-white transition-colors"
+                        title="Excluir"
+                       >
+                          <Trash2 className="w-5 h-5" />
+                       </button>
                     </div>
                   </td>
                 </tr>
@@ -251,7 +262,7 @@ export default function Overview() {
                         className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none"
                        />
                     </div>
-                    <div className="space-y-2">
+                     <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Horário</label>
                         <input 
                           type="time"
@@ -262,13 +273,22 @@ export default function Overview() {
                     </div>
                  </div>
 
-                 <button 
-                  onClick={handleUpdateBooking}
-                  disabled={updating}
-                  className="w-full py-5 bg-primary text-white rounded-3xl font-bold uppercase tracking-widest shadow-xl shadow-primary/20 flex items-center justify-center gap-3 disabled:opacity-50"
-                 >
-                   {updating ? 'Salvando...' : 'Salvar Alterações'}
-                 </button>
+                 <div className="flex gap-4">
+                    <button 
+                      onClick={() => handleDeleteBooking(selectedBooking)}
+                      className="flex-shrink-0 p-5 bg-red-50 text-red-600 rounded-3xl hover:bg-red-500 hover:text-white transition-all transform hover:scale-105"
+                      title="Excluir Agendamento"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={handleUpdateBooking}
+                      disabled={updating}
+                      className="flex-1 py-5 bg-primary text-white rounded-3xl font-bold uppercase tracking-widest shadow-xl shadow-primary/20 flex items-center justify-center gap-3 disabled:opacity-50 hover:scale-105 active:scale-95 transition-all"
+                    >
+                      {updating ? 'Salvando...' : 'Salvar Alterações'}
+                    </button>
+                 </div>
               </div>
             </motion.div>
           </div>

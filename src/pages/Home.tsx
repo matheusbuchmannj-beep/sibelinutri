@@ -267,12 +267,17 @@ export default function Home() {
       const whatsappUrl = `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(message)}`;
       setLastBookingUrl(whatsappUrl);
       
-      // Attempt immediate open (may be blocked by popup blockers after async await)
-      window.open(whatsappUrl, '_blank');
-      
-      // Scroll to top and show success
+      // Scroll to top and show success screen FIRST
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      setStep(5); 
+      setStep(5);
+      
+      // Attempt to open WhatsApp in a new tab
+      setTimeout(() => {
+        const win = window.open(whatsappUrl, '_blank');
+        if (!win) {
+          console.warn('Popup blocked by browser');
+        }
+      }, 100);
       
     } catch (e) {
       console.error('Erro no agendamento:', e);
@@ -909,21 +914,25 @@ export default function Home() {
                         </div>
                         <div className="space-y-4">
                           <h2 className="font-display text-5xl text-primary">Tudo pronto!</h2>
-                          <p className="text-slate-500 leading-relaxed px-10">
-                            Seu agendamento foi registrado. Agora basta aguardar a confirmação da nutricionista via WhatsApp.
-                          </p>
+                          <div className="bg-white/50 border border-white p-6 rounded-3xl mx-auto max-w-sm">
+                            <p className="text-slate-600 text-sm leading-relaxed">
+                              Sua solicitação foi enviada. Para agilizar a confirmação, clique no botão abaixo para nos enviar os detalhes via WhatsApp:
+                            </p>
+                          </div>
+                          
                           {lastBookingUrl && (
-                            <div className="pt-4">
+                            <div className="pt-6">
                               <a 
                                 href={lastBookingUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center gap-3 py-5 px-10 bg-[#25D366] text-white rounded-[2rem] font-bold text-xs uppercase tracking-widest shadow-xl shadow-green-100 hover:scale-105 transition-transform"
+                                className="inline-flex items-center gap-4 py-6 px-12 bg-[#25D366] text-white rounded-[2.5rem] font-black text-sm uppercase tracking-[0.15em] shadow-2xl shadow-green-200 hover:scale-105 active:scale-95 transition-all group relative overflow-hidden"
                               >
-                                <MessageCircle className="w-5 h-5 fill-white" /> Abrir WhatsApp novamente ↗
+                                <div className="absolute inset-0 bg-white/20 animate-pulse group-hover:opacity-100 opacity-0 transition-opacity" />
+                                <MessageCircle className="w-6 h-6 fill-white animate-bounce" /> Confirmar no WhatsApp
                               </a>
-                              <p className="text-[10px] text-slate-400 mt-4 uppercase font-bold tracking-widest">
-                                Clique caso a janela não tenha aberto automaticamente
+                              <p className="text-[10px] text-[#25D366] mt-6 uppercase font-black tracking-[0.3em] animate-pulse">
+                                Janela de conversa abrindo...
                               </p>
                             </div>
                           )}
