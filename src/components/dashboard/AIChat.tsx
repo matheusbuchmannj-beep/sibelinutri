@@ -6,7 +6,19 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { fetchSettings, fetchLocais, fetchHorarios, updateSheetData, fetchAgendamentos } from '../../lib/googleWorkspace';
 import { Booking, Settings as NutriSettings, Local } from '../../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let genAI: GoogleGenAI | null = null;
+function getAI() {
+  if (!genAI) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.warn("GEMINI_API_KEY is not defined.");
+      // Create a dummy instance or handle differently. 
+      // For now, let it be null and handle in calls.
+    }
+    genAI = new GoogleGenAI({ apiKey: apiKey || 'dummy-key' });
+  }
+  return genAI;
+}
 
 export default function AIChat() {
   const [chatOpen, setChatOpen] = useState(false);
@@ -121,7 +133,8 @@ export default function AIChat() {
         }
       };
 
-      let response = await ai.models.generateContent(modelParams as any);
+      const aiClient = getAI();
+      let response = await aiClient.models.generateContent(modelParams as any);
       let functionCalls = response.functionCalls;
       
       if (functionCalls && functionCalls.length > 0) {
@@ -160,7 +173,7 @@ export default function AIChat() {
         setContext(prev => ({ ...prev, availability: currentAvail }));
 
         // Send tool results back to model
-        response = await ai.models.generateContent({
+        response = await aiClient.models.generateContent({
           ...modelParams,
           contents: [
             ...modelParams.contents,

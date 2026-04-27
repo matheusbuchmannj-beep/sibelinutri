@@ -45,28 +45,37 @@ export const getAccessToken = async () => 'handled_by_firebase';
 
 export async function fetchSettings(): Promise<Settings> {
   const docRef = doc(db, 'config', 'settings');
-  const docSnap = await getDoc(docRef);
-  
-  if (docSnap.exists()) {
-    return { ...DEFAULT_SETTINGS, ...docSnap.data() } as Settings;
-  } else {
-    // Initial save of defaults if not exists
-    await setDoc(docRef, DEFAULT_SETTINGS);
+  try {
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      return { ...DEFAULT_SETTINGS, ...docSnap.data() } as Settings;
+    } else {
+      // Return defaults and attempt bootstrap (will fail but caught)
+      setDoc(docRef, DEFAULT_SETTINGS).catch(e => console.warn('Bootstrap settings failed:', e));
+      return DEFAULT_SETTINGS;
+    }
+  } catch (error) {
+    console.error('Error fetching settings:', error);
     return DEFAULT_SETTINGS;
   }
 }
 
 export async function fetchLocais(): Promise<Local[]> {
-  const locais = await getCollection<Local>('locais');
-  if (locais.length === 0) {
-    // Bootstrap defaults
-    for (const l of DEFAULT_LOCAIS) {
-      if (l.id === 'online') continue; // Handled separately or let it be
-      await setDoc(doc(db, 'locais', l.id), l);
+  try {
+    const locais = await getCollection<Local>('locais');
+    if (locais.length === 0) {
+      // Bootstrap attempt
+      for (const l of DEFAULT_LOCAIS) {
+        if (l.id === 'online') continue;
+        setDoc(doc(db, 'locais', l.id), l).catch(() => {});
+      }
+      return DEFAULT_LOCAIS;
     }
+    return locais;
+  } catch (e) {
     return DEFAULT_LOCAIS;
   }
-  return locais;
 }
 
 export async function fetchHorarios(): Promise<Record<string, Record<string, string[]>>> {
@@ -85,14 +94,18 @@ export async function fetchHorarios(): Promise<Record<string, Record<string, str
 }
 
 export async function fetchPlanos(): Promise<Plano[]> {
-  const planos = await getCollection<Plano>('planos');
-  if (planos.length === 0) {
-    for (const p of DEFAULT_PLANOS) {
-      await setDoc(doc(db, 'planos', p.id), p);
+  try {
+    const planos = await getCollection<Plano>('planos');
+    if (planos.length === 0) {
+      for (const p of DEFAULT_PLANOS) {
+        setDoc(doc(db, 'planos', p.id), p).catch(() => {});
+      }
+      return DEFAULT_PLANOS;
     }
+    return planos;
+  } catch (e) {
     return DEFAULT_PLANOS;
   }
-  return planos;
 }
 
 export async function fetchAlimentos(): Promise<Alimento[]> {

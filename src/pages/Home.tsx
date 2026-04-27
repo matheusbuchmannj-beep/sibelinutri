@@ -163,15 +163,18 @@ export default function Home() {
     async function init() {
       try {
         const [s, l, h, os] = await Promise.all([
-          fetchSettings(),
-          fetchLocais(),
-          fetchHorarios(),
-          fetchOccupiedSlots()
+          fetchSettings().catch(e => { console.error(e); return null; }),
+          fetchLocais().catch(e => { console.error(e); return []; }),
+          fetchHorarios().catch(e => { console.error(e); return {}; }),
+          fetchOccupiedSlots().catch(e => { console.error(e); return []; })
         ]);
-        setSettings(s);
-        setLocais(l);
-        setAvailability(h);
-        setOccupiedSlots(os);
+        
+        // We need at least settings to show something meaninful, 
+        // but fetchSettings already has a fallback to DEFAULT_SETTINGS inside.
+        if (s) setSettings(s);
+        setLocais(l || []);
+        setAvailability(h || {});
+        setOccupiedSlots(os || []);
       } catch (e) {
         console.error('Failed to load site data', e);
       } finally {
@@ -319,7 +322,7 @@ export default function Home() {
                   <h1 className="font-display text-5xl tracking-normal text-primary">
                     {settings.brandName.split(' ')[0]} <span className="text-brand-salmon">{settings.brandName.split(' ').slice(1).join(' ')}</span>
                   </h1>
-                  <p className="text-[10px] font-black tracking-[0.3em] text-slate-400 uppercase">Profissional • {settings.crn}</p>
+                  <p className="text-[10px] font-black tracking-[0.3em] text-slate-400 uppercase">Nutricionista • {settings.crn}</p>
                 </div>
               </section>
 
@@ -398,7 +401,7 @@ export default function Home() {
                     <h1 className="font-display text-5xl tracking-normal text-primary">
                       {settings.brandName.split(' ')[0]} <span className="text-brand-salmon">{settings.brandName.split(' ').slice(1).join(' ')}</span>
                     </h1>
-                    <p className="text-[10px] font-black tracking-[0.3em] text-slate-400 uppercase">Profissional • {settings.crn}</p>
+                    <p className="text-[10px] font-black tracking-[0.3em] text-slate-400 uppercase">Nutricionista • {settings.crn}</p>
                   </div>
                 </div>
 

@@ -19,7 +19,10 @@ export default function PatientDiet() {
   useEffect(() => {
     async function load() {
       try {
-        const [all, s] = await Promise.all([fetchDietas(), fetchSettings()]);
+        const [all, s] = await Promise.all([
+          fetchDietas().catch(() => []), 
+          fetchSettings().catch(() => null)
+        ]);
         if (id) {
           const d = all.find(item => item.id === id);
           setDieta(d || null);
