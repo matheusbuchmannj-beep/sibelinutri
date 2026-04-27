@@ -188,7 +188,24 @@ export default function Home() {
   const getSlotsForDate = (date: string, localId: string) => {
     const dayAvail = availability[date] || {};
     const slots = dayAvail[localId] || [];
-    return slots.filter(s => !isSlotBooked(date, s));
+    
+    // Filter booked slots
+    let filteredSlots = slots.filter(s => !isSlotBooked(date, s));
+    
+    // Filter past slots for today
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    if (date === todayStr) {
+      const now = new Date();
+      filteredSlots = filteredSlots.filter(time => {
+        // time format is "HH:mm"
+        const [hours, minutes] = time.split(':').map(Number);
+        const slotTime = new Date();
+        slotTime.setHours(hours, minutes, 0, 0);
+        return slotTime > now;
+      });
+    }
+
+    return filteredSlots;
   };
 
   const handleStartBooking = (plan?: any) => {
@@ -312,7 +329,7 @@ export default function Home() {
                   onClick={() => setView('start')}
                   className="w-full bg-[#869471] p-8 rounded-[2rem] shadow-xl shadow-[#869471]/20 hover:scale-[1.02] active:scale-[0.98] transition-all group relative flex flex-col items-center justify-center gap-1 border-b-4 border-black/10"
                 >
-                  <span className="font-display text-2xl text-white uppercase tracking-tight">Conheça os planos e agende sua consulta</span>
+                  <span className="font-sans font-bold text-lg text-white uppercase tracking-wide">Conheça os planos e agende sua consulta</span>
                 </button>
 
                 <a 
