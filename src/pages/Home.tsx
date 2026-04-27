@@ -330,9 +330,14 @@ export default function Home() {
               <div className="flex flex-col gap-4">
                 <button 
                   onClick={() => setView('start')}
-                  className="w-full bg-[#869471] p-8 rounded-[2rem] shadow-xl shadow-[#869471]/20 hover:scale-[1.02] active:scale-[0.98] transition-all group relative flex flex-col items-center justify-center gap-1 border-b-4 border-black/10"
+                  className="w-full bg-[#869471] p-8 rounded-[2rem] shadow-xl shadow-[#869471]/20 hover:scale-[1.02] active:scale-[0.98] transition-all group relative flex items-center justify-center border-b-4 border-black/10 overflow-hidden"
                 >
-                  <span className="font-sans font-bold text-lg text-white uppercase tracking-wide">Conheça os planos e agende sua consulta</span>
+                  <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="font-sans text-sm sm:text-lg uppercase tracking-wider flex flex-wrap justify-center items-center gap-x-4 gap-y-1 relative z-10 text-white">
+                    <span className="font-bold">Conheça os planos</span>
+                    <span className="hidden sm:inline opacity-30">•</span>
+                    <span className="font-light italic opacity-90">Agende sua consulta</span>
+                  </span>
                 </button>
 
                 <a 
@@ -405,39 +410,69 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Mode Toggle */}
-                <div className="space-y-4">
-                  <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Selecione a Modalidade</p>
-                  <div className="max-w-[280px] mx-auto p-1 bg-white/50 backdrop-blur-md rounded-full border border-white shadow-inner flex">
-                    <button 
-                      onClick={() => setMode('online')}
-                      className={cn(
-                        "flex-1 py-3 px-6 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
-                        mode === 'online' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-slate-600"
-                      )}
-                    >
-                      Online
-                    </button>
-                    <button 
-                      onClick={() => setMode('presencial')}
-                      className={cn(
-                        "flex-1 py-3 px-6 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
-                        mode === 'presencial' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-slate-600"
-                      )}
-                    >
-                      Presencial
-                    </button>
+                {/* Mode Toggle - Only show after initial selection */}
+                {mode && (
+                  <div className="space-y-4">
+                    <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase text-center">Alterar Modalidade</p>
+                    <div className="max-w-[280px] mx-auto p-1 bg-white/50 backdrop-blur-md rounded-full border border-white shadow-inner flex">
+                      <button 
+                        onClick={() => setMode('online')}
+                        className={cn(
+                          "flex-1 py-3 px-6 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
+                          mode === 'online' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-slate-600"
+                        )}
+                      >
+                        Online
+                      </button>
+                      <button 
+                        onClick={() => setMode('presencial')}
+                        className={cn(
+                          "flex-1 py-3 px-6 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
+                          mode === 'presencial' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-slate-600"
+                        )}
+                      >
+                        Presencial
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
               </section>
 
               {/* Consultation Section */}
               <section className="space-y-6">
                 {!mode ? (
-                  <div className="text-center py-20 bg-white/30 rounded-[3rem] border border-dashed border-slate-200 backdrop-blur-sm">
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-2">Aguardando sua escolha</p>
-                    <h3 className="text-2xl font-display text-primary/60">SELECIONE A MODALIDADE</h3>
-                    <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-bold">Para ver os valores e planos disponíveis</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-12">
+                    <button
+                      onClick={() => setMode('online')}
+                      className="group p-10 rounded-[3rem] bg-white border border-slate-100 shadow-sm hover:shadow-2xl hover:scale-[1.02] transition-all flex flex-col items-center gap-6 text-center"
+                    >
+                      <div className="w-20 h-20 rounded-3xl bg-secondary/10 flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-all duration-500 transform group-hover:rotate-6">
+                        <Video className="w-10 h-10" />
+                      </div>
+                      <div className="space-y-2">
+                        <h4 className="text-2xl font-display text-primary uppercase tracking-wide">Consulta Online</h4>
+                        <p className="text-xs text-slate-400 font-medium uppercase tracking-[0.2em]">Google Meet • No conforto de casa</p>
+                      </div>
+                      <div className="px-6 py-2 bg-slate-50 rounded-full text-[9px] font-black uppercase tracking-widest text-slate-400 group-hover:bg-primary group-hover:text-white transition-colors">
+                        Selecionar
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => setMode('presencial')}
+                      className="group p-10 rounded-[3rem] bg-white border border-slate-100 shadow-sm hover:shadow-2xl hover:scale-[1.02] transition-all flex flex-col items-center gap-6 text-center"
+                    >
+                      <div className="w-20 h-20 rounded-3xl bg-accent/10 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-white transition-all duration-500 transform group-hover:-rotate-6">
+                        <MapPin className="w-10 h-10" />
+                      </div>
+                      <div className="space-y-2">
+                        <h4 className="text-2xl font-display text-primary uppercase tracking-wide">Consulta Presencial</h4>
+                        <p className="text-xs text-slate-400 font-medium uppercase tracking-[0.2em]">No Consultório • Atendimento Físico</p>
+                      </div>
+                      <div className="px-6 py-2 bg-slate-50 rounded-full text-[9px] font-black uppercase tracking-widest text-slate-400 group-hover:bg-primary group-hover:text-white transition-colors">
+                        Selecionar
+                      </div>
+                    </button>
                   </div>
                 ) : (
                   <>
