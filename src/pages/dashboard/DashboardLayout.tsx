@@ -8,15 +8,28 @@ import {
   X,
   Apple,
   CreditCard,
-  Utensils
+  Utensils,
+  LogOut
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../../lib/utils';
 import AIChat from '../../components/dashboard/AIChat';
+import { auth } from '../../lib/firebase';
+import { signOut } from 'firebase/auth';
 
 export default function DashboardLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem('admin_session');
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   const navItems = [
     { to: '/admin', label: 'Início', icon: LayoutDashboard, end: true },
@@ -61,6 +74,19 @@ export default function DashboardLayout() {
             </NavLink>
           ))}
         </nav>
+
+        <div className="p-4 border-t border-slate-100">
+           <button 
+             onClick={handleLogout}
+             className={cn(
+               "flex items-center gap-3 p-4 w-full rounded-2xl transition-all font-bold text-sm text-red-500 hover:bg-red-50",
+               !isSidebarOpen && "justify-center"
+             )}
+           >
+             <LogOut className="w-5 h-5 flex-shrink-0" />
+             {isSidebarOpen && <span>Sair</span>}
+           </button>
+        </div>
       </aside>
 
       {/* Main Content */}

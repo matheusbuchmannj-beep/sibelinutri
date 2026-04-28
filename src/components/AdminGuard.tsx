@@ -8,6 +8,10 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
   const [loading, setLoading] = useState(true);
 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [useCredentials, setUseCredentials] = useState(false);
+  const [isLocalAuth, setIsLocalAuth] = useState(() => localStorage.getItem('admin_session') === 'true');
 
   useEffect(() => {
     return onAuthStateChanged(auth, (user) => {
@@ -15,6 +19,16 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
       setLoading(false);
     });
   }, []);
+
+  const handleLocalLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (username.toLowerCase() === 'sibeli' && password === '2907') {
+      localStorage.setItem('admin_session', 'true');
+      setIsLocalAuth(true);
+    } else {
+      alert('Usuário ou senha incorretos.');
+    }
+  };
 
   const handleLogin = async () => {
     if (isLoggingIn) return;
@@ -49,7 +63,9 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
     );
   }
 
-  if (!user || !ALLOWED_EMAILS.includes(user.email || '')) {
+  const authenticatedByEmail = user && ALLOWED_EMAILS.includes(user.email || '');
+  
+  if (!authenticatedByEmail && !isLocalAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
         <div className="max-w-md w-full bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-100 text-center space-y-8">
@@ -67,18 +83,66 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
              </p>
            )}
 
-           <button 
-             onClick={handleLogin}
-             disabled={isLoggingIn}
-             className="w-full py-5 bg-primary text-white rounded-2xl font-bold uppercase tracking-widest shadow-xl shadow-primary/20 flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
-           >
-             {isLoggingIn ? (
-               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-             ) : (
-               <LogIn className="w-5 h-5" />
-             )}
-             {isLoggingIn ? 'Conectando...' : 'Entrar com Google'}
-           </button>
+           {!useCredentials ? (
+             <div className="space-y-4">
+               <button 
+                 onClick={handleLogin}
+                 disabled={isLoggingIn}
+                 className="w-full py-5 bg-primary text-white rounded-2xl font-bold uppercase tracking-widest shadow-xl shadow-primary/20 flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+               >
+                 {isLoggingIn ? (
+                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                 ) : (
+                   <LogIn className="w-5 h-5" />
+                 )}
+                 {isLoggingIn ? 'Conectando...' : 'Entrar com Google'}
+               </button>
+               <button 
+                 onClick={() => setUseCredentials(true)}
+                 className="text-primary font-bold uppercase tracking-widest text-[10px] hover:underline"
+               >
+                 Entrar com usuário e senha
+               </button>
+             </div>
+           ) : (
+             <form onSubmit={handleLocalLogin} className="space-y-4">
+                <div className="space-y-1 text-left">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-4">Usuário</label>
+                  <input 
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none"
+                    placeholder="Nome de usuário"
+                  />
+                </div>
+                <div className="space-y-1 text-left">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-4">Senha</label>
+                  <input 
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none"
+                    placeholder="••••"
+                  />
+                </div>
+                <div className="pt-2 space-y-4">
+                  <button 
+                    type="submit"
+                    className="w-full py-5 bg-primary text-white rounded-2xl font-bold uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                  >
+                    Entrar
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setUseCredentials(false)}
+                    className="text-slate-400 font-bold uppercase tracking-widest text-[10px] hover:underline"
+                  >
+                    Voltar para Google Login
+                  </button>
+                </div>
+             </form>
+           )}
         </div>
       </div>
     );
