@@ -119,19 +119,27 @@ export async function fetchDietas(): Promise<Dieta[]> {
 export async function saveAgendamento(booking: Booking) {
   const id = booking.id || Math.random().toString(36).substr(2, 9);
   
-  // Save the full booking (private)
-  await setDoc(doc(db, 'agendamentos', id), { ...booking, id });
-  
-  // Save the occupied slot (public)
-  const slotId = `${booking.date}_${booking.time}`;
-  await setDoc(doc(db, 'slots_occupied', slotId), {
-    date: booking.date,
-    time: booking.time,
-    status: booking.status,
-    bookingId: id
-  });
+  try {
+    console.log('Salvando agendamento...', id);
+    // Save the full booking
+    await setDoc(doc(db, 'agendamentos', id), { ...booking, id });
+    
+    // Save the occupied slot
+    const slotId = `${booking.date}_${booking.time}`;
+    await setDoc(doc(db, 'slots_occupied', slotId), {
+      date: booking.date,
+      time: booking.time,
+      status: booking.status,
+      bookingId: id
+    });
 
-  return { ok: true };
+    console.log('Agendamento salvo com sucesso!');
+    return { ok: true };
+  } catch (error) {
+    console.error('Erro ao salvar no Firestore:', error);
+    handleFirestoreError(error, OperationType.CREATE, 'agendamentos');
+    return { ok: false };
+  }
 }
 
 export async function fetchAgendamentos(): Promise<Booking[]> {

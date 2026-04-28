@@ -28,9 +28,19 @@ export default function Overview() {
   const loadBookings = async () => {
     try {
       const list = await fetchAgendamentos();
-      setBookings([...list].reverse()); 
+      // Sort by date and time (most recent first)
+      const sorted = [...list].sort((a, b) => {
+        try {
+          const dateA = new Date(`${a.date}T${a.time && a.time !== 'WPP' ? a.time : '00:00'}`);
+          const dateB = new Date(`${b.date}T${b.time && b.time !== 'WPP' ? b.time : '00:00'}`);
+          return dateB.getTime() - dateA.getTime();
+        } catch (e) {
+          return 0;
+        }
+      });
+      setBookings(sorted); 
     } catch (e) {
-      console.error(e);
+      console.error('Error loading bookings:', e);
     } finally {
       setLoading(false);
     }
