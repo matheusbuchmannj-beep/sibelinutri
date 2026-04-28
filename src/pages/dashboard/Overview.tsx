@@ -31,8 +31,8 @@ export default function Overview() {
       // Sort by date and time (most recent first)
       const sorted = [...list].sort((a, b) => {
         try {
-          const dateA = new Date(`${a.date}T${a.time && a.time !== 'WPP' ? a.time : '00:00'}`);
-          const dateB = new Date(`${b.date}T${b.time && b.time !== 'WPP' ? b.time : '00:00'}`);
+          const dateA = new Date(`${a.date}T${a.time && !['WPP', 'PRESENCIAL'].includes(a.time) ? a.time : '00:00'}`);
+          const dateB = new Date(`${b.date}T${b.time && !['WPP', 'PRESENCIAL'].includes(b.time) ? b.time : '00:00'}`);
           return dateB.getTime() - dateA.getTime();
         } catch (e) {
           return 0;
@@ -162,8 +162,15 @@ export default function Overview() {
                     <span className="text-xs text-slate-400">{booking.whatsapp}</span>
                   </td>
                   <td className="px-8 py-6">
-                    <span className="block font-bold text-slate-700">{booking.date}</span>
-                    <span className="text-xs text-slate-400">{booking.time} ({booking.type})</span>
+                    <span className="block font-bold text-slate-700">
+                      {booking.date.split('-').reverse().join('/')}
+                    </span>
+                    <span className={cn(
+                      "text-[10px] font-black uppercase tracking-widest",
+                      booking.time === 'PRESENCIAL' ? "text-primary" : "text-slate-400"
+                    )}>
+                      {booking.time}
+                    </span>
                   </td>
                   <td className="px-8 py-6">
                     <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">
@@ -175,6 +182,7 @@ export default function Overview() {
                       "inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
                       booking.status === 'Confirmado' ? "bg-green-50 text-green-600" : 
                       booking.status === 'Cancelado' ? "bg-red-50 text-red-600" :
+                      booking.status === 'Lead WhatsApp' ? "bg-blue-50 text-blue-600 border border-blue-100" :
                       "bg-amber-50 text-amber-600"
                     )}>
                       {booking.status}

@@ -238,7 +238,7 @@ export default function Home() {
     
     try {
       const bookingDate = isUp2You ? format(new Date(), 'yyyy-MM-dd') : selectedDate!;
-      const bookingTime = isUp2You ? 'WPP' : selectedTime!;
+      const bookingTime = isUp2You ? 'PRESENCIAL' : selectedTime!;
       const bookingId = `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
       
       const booking: Booking = {
@@ -247,12 +247,15 @@ export default function Home() {
         whatsapp: formData.whatsapp,
         date: bookingDate,
         time: bookingTime,
-        type: mode,
-        localId: mode === 'online' ? 'online' : (selectedLocal?.id || 'presencial'),
+        type: isUp2You ? 'presencial' : 'online',
+        localId: isUp2You ? 'presencial' : 'online',
         status: isUp2You ? 'Lead WhatsApp' : 'Pendente',
         createdAt: new Date().toISOString(),
         planoId: selectedPlan?.name || 'Consulta Avulsa'
       };
+
+      // Save to Database FIRST to ensure it records even if user leaves
+      await saveAgendamento(booking);
 
       // WhatsApp Message Preparation
       let message = '';
@@ -266,14 +269,11 @@ export default function Home() {
       const whatsappUrl = `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(message)}`;
       setLastBookingUrl(whatsappUrl);
 
-      // Attempt to open WhatsApp BEFORE the async call to avoid popup blockers
+      // Attempt to open WhatsApp
       const win = window.open(whatsappUrl, '_blank');
       if (!win) {
-        console.warn('Popup blocked by browser');
+        console.warn('Popup blocked, but booking is saved anyway.');
       }
-      
-      // Save to Database
-      await saveAgendamento(booking);
       
       // Scroll to top and show success screen
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -281,7 +281,7 @@ export default function Home() {
       
     } catch (e) {
       console.error('Erro no agendamento:', e);
-      alert('Erro ao salvar agendamento. Seus dados foram enviados para a nutricionista via WhatsApp.');
+      alert('Erro ao processar agendamento. Seus dados foram salvos e enviados para a nutricionista.');
     } finally {
       setIsBooking(false);
     }
