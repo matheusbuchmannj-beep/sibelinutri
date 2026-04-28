@@ -235,12 +235,14 @@ export default function Home() {
     }
 
     setIsBooking(true);
+    
     try {
       const bookingDate = isUp2You ? format(new Date(), 'yyyy-MM-dd') : selectedDate!;
       const bookingTime = isUp2You ? 'WPP' : selectedTime!;
+      const bookingId = `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
       
       const booking: Booking = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: bookingId,
         patientName: formData.name,
         whatsapp: formData.whatsapp,
         date: bookingDate,
@@ -251,11 +253,8 @@ export default function Home() {
         createdAt: new Date().toISOString(),
         planoId: selectedPlan?.name || 'Consulta Avulsa'
       };
-      
-      // Save to Google Sheets
-      await saveAgendamento(booking);
 
-      // WhatsApp Message
+      // WhatsApp Message Preparation
       let message = '';
       if (isUp2You) {
         message = `Olá! Tenho interesse no atendimento presencial na Up2You:\n\n👤 *Paciente:* ${formData.name}\n💼 *Plano:* ${selectedPlan?.name || 'Consulta Avulsa'}\n💳 *Pagamento:* ${paymentMethod === 'pix' ? 'PIX' : 'Link de Pagamento'}\n\nGostaria de conferir os horários disponíveis.`;
@@ -266,21 +265,23 @@ export default function Home() {
       const sanitizedPhone = settings.whatsappNumber.replace(/\D/g, '');
       const whatsappUrl = `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(message)}`;
       setLastBookingUrl(whatsappUrl);
-      
-      // Attempt to open WhatsApp in a new tab immediately
+
+      // Attempt to open WhatsApp BEFORE the async call to avoid popup blockers
       const win = window.open(whatsappUrl, '_blank');
+      if (!win) {
+        console.warn('Popup blocked by browser');
+      }
+      
+      // Save to Database
+      await saveAgendamento(booking);
       
       // Scroll to top and show success screen
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setStep(5);
       
-      if (!win) {
-        console.warn('Popup blocked, will rely on the button in the success screen');
-      }
-      
     } catch (e) {
       console.error('Erro no agendamento:', e);
-      alert('Erro ao salvar agendamento. Você pode tentar falar diretamente no WhatsApp.');
+      alert('Erro ao salvar agendamento. Seus dados foram enviados para a nutricionista via WhatsApp.');
     } finally {
       setIsBooking(false);
     }
@@ -344,7 +345,7 @@ export default function Home() {
                 >
                   <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                   <span className="font-sans text-[10px] sm:text-base uppercase tracking-[0.25em] flex flex-wrap justify-center items-center gap-x-5 gap-y-2 relative z-10">
-                    <span className="font-medium text-white/60">Conheça os planos</span>
+                    <span className="font-medium text-white/50">Conheça os planos</span>
                     <span className="hidden sm:inline w-px h-4 bg-white/20" />
                     <span className="font-black text-white">Agende sua consulta</span>
                   </span>
