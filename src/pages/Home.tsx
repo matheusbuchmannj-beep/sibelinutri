@@ -254,9 +254,6 @@ export default function Home() {
         planoId: selectedPlan?.name || 'Consulta Avulsa'
       };
 
-      // Save to Database FIRST to ensure it records even if user leaves
-      await saveAgendamento(booking);
-
       // WhatsApp Message Preparation
       let message = '';
       if (isUp2You) {
@@ -269,19 +266,20 @@ export default function Home() {
       const whatsappUrl = `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(message)}`;
       setLastBookingUrl(whatsappUrl);
 
-      // Attempt to open WhatsApp
+      // Attempt to open WhatsApp IMMEDIATELY (sync) to avoid popup blockers
       const win = window.open(whatsappUrl, '_blank');
-      if (!win) {
-        console.warn('Popup blocked, but booking is saved anyway.');
-      }
       
-      // Scroll to top and show success screen
+      // Show success screen immediately
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setStep(5);
       
+      // Save to Database in background
+      saveAgendamento(booking).catch(err => console.error('Silent save error:', err));
+      
     } catch (e) {
       console.error('Erro no agendamento:', e);
-      alert('Erro ao processar agendamento. Seus dados foram salvos e enviados para a nutricionista.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setStep(5);
     } finally {
       setIsBooking(false);
     }

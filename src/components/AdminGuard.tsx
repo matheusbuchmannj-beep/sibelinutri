@@ -83,28 +83,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
              </p>
            )}
 
-           {!useCredentials ? (
-             <div className="space-y-4">
-               <button 
-                 onClick={handleLogin}
-                 disabled={isLoggingIn}
-                 className="w-full py-5 bg-primary text-white rounded-2xl font-bold uppercase tracking-widest shadow-xl shadow-primary/20 flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
-               >
-                 {isLoggingIn ? (
-                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                 ) : (
-                   <LogIn className="w-5 h-5" />
-                 )}
-                 {isLoggingIn ? 'Conectando...' : 'Entrar com Google'}
-               </button>
-               <button 
-                 onClick={() => setUseCredentials(true)}
-                 className="text-primary font-bold uppercase tracking-widest text-[10px] hover:underline"
-               >
-                 Entrar com usuário e senha
-               </button>
-             </div>
-           ) : (
+           {!isLocalAuth && (
              <form onSubmit={handleLocalLogin} className="space-y-4">
                 <div className="space-y-1 text-left">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-4">Usuário</label>
@@ -132,13 +111,6 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
                     className="w-full py-5 bg-primary text-white rounded-2xl font-bold uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
                   >
                     Entrar
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => setUseCredentials(false)}
-                    className="text-slate-400 font-bold uppercase tracking-widest text-[10px] hover:underline"
-                  >
-                    Voltar para Google Login
                   </button>
                 </div>
              </form>

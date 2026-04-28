@@ -136,8 +136,9 @@ export async function saveAgendamento(booking: Booking) {
     console.log('Agendamento salvo com sucesso!');
     return { ok: true };
   } catch (error) {
-    console.error('Erro ao salvar no Firestore:', error);
-    handleFirestoreError(error, OperationType.CREATE, 'agendamentos');
+    console.error('Erro ao salvar no Firestore (continuando para WhatsApp):', error);
+    // We don't call handleFirestoreError here to avoid throwing and blocking the UI
+    // The admin will still have the WhatsApp message as a record
     return { ok: false };
   }
 }
@@ -173,17 +174,32 @@ export async function updateAgendamento(booking: Booking) {
 
 export async function deleteAgendamento(bookingId: string, date?: string, time?: string) {
   try {
+    let bookingDate = date;
+    let bookingTime = time;
+
+    // If date/time not provided, try to fetch the booking first to get them
+    if (!bookingDate || !bookingTime) {
+      const snap = await getDoc(doc(db, 'agendamentos', bookingId));
+      if (snap.exists()) {
+        const data = snap.data();
+        bookingDate = data.date;
+        bookingTime = data.time;
+      }
+    }
+
     // Delete the booking
     await deleteDoc(doc(db, 'agendamentos', bookingId));
     
-    // Delete the slot if info provided
-    if (date && time) {
-      const slotId = `${date}_${time}`;
+    // Delete the slot 
+    if (bookingDate && bookingTime) {
+      const slotId = `${bookingDate}_${bookingTime}`;
       try {
         const slotRef = doc(db, 'slots_occupied', slotId);
         const slotSnap = await getDoc(slotRef);
+        // Only delete if it belongs to this booking
         if (slotSnap.exists() && slotSnap.data().bookingId === bookingId) {
           await deleteDoc(slotRef);
+          console.log('Slot released:', slotId);
         }
       } catch (e) {
         console.warn('Slot delete failed:', e);
@@ -211,8 +227,6 @@ export async function updateSheetData(range: string, values: any[][]) {
   
   if (range.includes('Locais')) {
     const batch = writeBatch(db);
-    // Delete old ones? Or just overwrite by ID?
-    // Let's assume we overwrite by ID. Professional way would be sync diff.
     for (const v of values) {
       if (v[0]) {
         const lRef = doc(db, 'locais', v[0]);
@@ -224,15 +238,24 @@ export async function updateSheetData(range: string, values: any[][]) {
 
   if (range.includes('Horarios')) {
     const batch = writeBatch(db);
+    // Get current keys to identify what needs to be deleted if not in values
+    // For simplicity, we'll just set what we have. 
+    // To handle deletions, we'd need to know the full set of dates being managed.
     for (const [date, lid, slotsStr] of values) {
       if (date && lid) {
         const hId = `${date}_${lid}`;
         const hRef = doc(db, 'horarios', hId);
-        batch.set(hRef, { 
-          date, 
-          localId: lid, 
-          slots: slotsStr.split(',').map((s: string) => s.trim()).filter((s: string) => s !== '')
-        });
+        const slots = slotsStr.split(',').map((s: string) => s.trim()).filter((s: string) => s !== '');
+        
+        if (slots.length > 0) {
+          batch.set(hRef, { 
+            date, 
+            localId: lid, 
+            slots: slots
+          });
+        } else {
+          batch.delete(hRef);
+        }
       }
     }
     return batch.commit();
