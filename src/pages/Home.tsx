@@ -267,17 +267,16 @@ export default function Home() {
       const whatsappUrl = `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(message)}`;
       setLastBookingUrl(whatsappUrl);
       
-      // Scroll to top and show success screen FIRST
+      // Attempt to open WhatsApp in a new tab immediately
+      const win = window.open(whatsappUrl, '_blank');
+      
+      // Scroll to top and show success screen
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setStep(5);
       
-      // Attempt to open WhatsApp in a new tab
-      setTimeout(() => {
-        const win = window.open(whatsappUrl, '_blank');
-        if (!win) {
-          console.warn('Popup blocked by browser');
-        }
-      }, 100);
+      if (!win) {
+        console.warn('Popup blocked, will rely on the button in the success screen');
+      }
       
     } catch (e) {
       console.error('Erro no agendamento:', e);
@@ -344,10 +343,10 @@ export default function Home() {
                   className="w-full bg-[#869471] p-8 rounded-[2rem] shadow-xl shadow-[#869471]/20 hover:scale-[1.02] active:scale-[0.98] transition-all group relative flex items-center justify-center border-b-4 border-black/10 overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <span className="font-sans text-sm sm:text-lg uppercase tracking-wider flex flex-wrap justify-center items-center gap-x-4 gap-y-1 relative z-10 text-white">
-                    <span className="font-bold">Conheça os planos</span>
-                    <span className="hidden sm:inline opacity-30">•</span>
-                    <span className="font-light italic opacity-90">Agende sua consulta</span>
+                  <span className="font-sans text-[10px] sm:text-base uppercase tracking-[0.25em] flex flex-wrap justify-center items-center gap-x-5 gap-y-2 relative z-10">
+                    <span className="font-medium text-white/60">Conheça os planos</span>
+                    <span className="hidden sm:inline w-px h-4 bg-white/20" />
+                    <span className="font-black text-white">Agende sua consulta</span>
                   </span>
                 </button>
 
@@ -916,7 +915,7 @@ export default function Home() {
                           <h2 className="font-display text-5xl text-primary">Tudo pronto!</h2>
                           <div className="bg-white/50 border border-white p-6 rounded-3xl mx-auto max-w-sm">
                             <p className="text-slate-600 text-sm leading-relaxed">
-                              Sua solicitação foi enviada. Para agilizar a confirmação, clique no botão abaixo para nos enviar os detalhes via WhatsApp:
+                              Sua solicitação foi registrada no sistema. Caso a janela do WhatsApp não tenha aberto automaticamente, clique no botão abaixo:
                             </p>
                           </div>
                           
@@ -928,12 +927,9 @@ export default function Home() {
                                 rel="noreferrer"
                                 className="inline-flex items-center gap-4 py-6 px-12 bg-[#25D366] text-white rounded-[2.5rem] font-black text-sm uppercase tracking-[0.15em] shadow-2xl shadow-green-200 hover:scale-105 active:scale-95 transition-all group relative overflow-hidden"
                               >
-                                <div className="absolute inset-0 bg-white/20 animate-pulse group-hover:opacity-100 opacity-0 transition-opacity" />
-                                <MessageCircle className="w-6 h-6 fill-white animate-bounce" /> Confirmar no WhatsApp
+                                <div className="absolute inset-0 bg-white/10 group-hover:opacity-100 opacity-0 transition-opacity" />
+                                <MessageCircle className="w-6 h-6 fill-white" /> Enviar Mensagem
                               </a>
-                              <p className="text-[10px] text-[#25D366] mt-6 uppercase font-black tracking-[0.3em] animate-pulse">
-                                Janela de conversa abrindo...
-                              </p>
                             </div>
                           )}
                         </div>
