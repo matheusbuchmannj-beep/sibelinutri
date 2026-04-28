@@ -329,11 +329,14 @@ export default function Home() {
                   </div>
                 </div>
                 
-                <div className="space-y-1">
+                <div className="space-y-2">
                   <h1 className="font-display text-5xl tracking-normal text-primary">
                     {settings.brandName.split(' ')[0]} <span className="text-brand-salmon">{settings.brandName.split(' ').slice(1).join(' ')}</span>
                   </h1>
-                  <p className="text-[10px] font-black tracking-[0.3em] text-slate-400 uppercase">Nutricionista • {settings.crn}</p>
+                  <p className="text-[10px] font-black tracking-[0.3em] text-slate-400 uppercase leading-none">Nutricionista • {settings.crn}</p>
+                  <p className="text-[9px] font-medium tracking-tight text-slate-400">
+                    Atendimento presencial em Joinville | Atendimento on-line em todo Brasil
+                  </p>
                 </div>
               </section>
 
@@ -350,6 +353,23 @@ export default function Home() {
                     <span className="font-black text-white">Agende sua consulta</span>
                   </span>
                 </button>
+
+                <a 
+                  href="https://www.google.com/maps/search/?api=1&query=R.+Jaragu%C3%A1,+604+-+Am%C3%A9rica,+Joinville+-+SC,+89204-650"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full bg-white border border-slate-100 p-6 rounded-[2rem] shadow-sm hover:shadow-md hover:border-primary/30 transition-all flex items-center justify-center gap-4 group"
+                >
+                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary transition-colors">
+                    <MapPin className="w-5 h-5 text-primary group-hover:text-white" />
+                  </div>
+                  <div className="text-left">
+                    <span className="block font-display text-xl text-primary leading-none">Localização</span>
+                    <span className="text-[11px] font-display text-slate-400 mt-1 block">
+                      Consultório sob agendamento
+                    </span>
+                  </div>
+                </a>
 
                 <a 
                   href={`https://wa.me/${settings.whatsappNumber.replace(/\D/g, '')}`}
@@ -413,11 +433,14 @@ export default function Home() {
                   >
                     <ChevronLeft className="w-6 h-6" />
                   </button>
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     <h1 className="font-display text-5xl tracking-normal text-primary">
                       {settings.brandName.split(' ')[0]} <span className="text-brand-salmon">{settings.brandName.split(' ').slice(1).join(' ')}</span>
                     </h1>
-                    <p className="text-[10px] font-black tracking-[0.3em] text-slate-400 uppercase">Nutricionista • {settings.crn}</p>
+                    <p className="text-[10px] font-black tracking-[0.3em] text-slate-400 uppercase leading-none">Nutricionista • {settings.crn}</p>
+                    <p className="text-[9px] font-medium tracking-tight text-slate-400">
+                      Atendimento presencial em Joinville | Atendimento on-line em todo Brasil
+                    </p>
                   </div>
                 </div>
 
