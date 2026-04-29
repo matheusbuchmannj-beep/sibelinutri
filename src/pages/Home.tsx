@@ -76,6 +76,7 @@ const PLANS_ONLINE = [
       '3 consultas online (1/mês)',
       'Plano alimentar personalizado com ajustes mensais',
       'Suporte via WhatsApp',
+      'Análise de exames (quando necessário)',
       'Material de apoio'
     ]
   },
