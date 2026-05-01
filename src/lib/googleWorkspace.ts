@@ -31,7 +31,8 @@ const DEFAULT_SETTINGS: Settings = {
 
 const DEFAULT_LOCAIS: Local[] = [
   { id: 'online', name: 'Atendimento Online', address: 'Via Google Meet / WhatsApp', mapsLink: '' },
-  { id: '2', name: 'Up2You Clinical', address: 'R. Jaraguá, 604 - América, Joinville - SC, 89204-650', mapsLink: 'https://maps.app.goo.gl/XWCy92EWcgtu5cRn7' }
+  { id: '2', name: 'Up2You Clinical', address: 'R. Jaraguá, 604 - América, Joinville - SC, 89204-650', mapsLink: 'https://maps.app.goo.gl/XWCy92EWcgtu5cRn7' },
+  { id: '3', name: 'Ânima Movimento e Bem Estar', address: 'Rua: Tuiuti, 2295 - Aventureiro, Joinville - SC', mapsLink: 'https://maps.app.goo.gl/rzxfaE9X3kbccFu88' }
 ];
 
 const DEFAULT_PLANOS: Plano[] = [
@@ -64,16 +65,25 @@ export async function fetchSettings(): Promise<Settings> {
 export async function fetchLocais(): Promise<Local[]> {
   try {
     const locais = await getCollection<Local>('locais');
-    if (locais.length === 0) {
-      // Bootstrap attempt
-      for (const l of DEFAULT_LOCAIS) {
-        if (l.id === 'online') continue;
-        setDoc(doc(db, 'locais', l.id), l).catch(() => {});
+    
+    // Check if any default local is missing and add it if so
+    let updated = false;
+    for (const dl of DEFAULT_LOCAIS) {
+      if (dl.id === 'online') continue;
+      if (!locais.find(l => l.id === dl.id)) {
+        await setDoc(doc(db, 'locais', dl.id), dl);
+        locais.push(dl);
+        updated = true;
       }
-      return DEFAULT_LOCAIS;
     }
-    return locais;
+    
+    if (updated) {
+      console.log('Bootstrapped missing default locations');
+    }
+
+    return locais.length > 0 ? locais : DEFAULT_LOCAIS;
   } catch (e) {
+    console.error('Error fetching locais:', e);
     return DEFAULT_LOCAIS;
   }
 }

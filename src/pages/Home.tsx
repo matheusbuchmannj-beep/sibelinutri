@@ -4,7 +4,7 @@ import {
   ChevronLeft, MessageCircle, MapPin, Video, 
   Calendar as CalendarIcon, Clock, CheckCircle, X,
   ArrowRight, Info, LayoutGrid, Heart, Stethoscope, Sparkles,
-  ChevronRight, ArrowLeft, Mail, Check, User
+  ChevronRight, ArrowLeft, Mail, Check, User, ChevronDown
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { format, addDays, parse } from 'date-fns';
@@ -160,6 +160,7 @@ export default function Home() {
 
   const [isBooking, setIsBooking] = useState(false);
   const [lastBookingUrl, setLastBookingUrl] = useState<string | null>(null);
+  const [showLocations, setShowLocations] = useState(false);
 
   useEffect(() => {
     async function init() {
@@ -219,12 +220,14 @@ export default function Home() {
     setStep(mode === 'presencial' ? 1 : 2);
   };
 
-  const isUp2You = selectedLocal?.name.toLowerCase().includes('up2you');
+  const presencialLocais = locais.filter(l => l.id !== 'online');
+
+  const isWhatsAppOnly = selectedLocal?.name.toLowerCase().includes('up2you') || selectedLocal?.name.toLowerCase().includes('ânima');
 
   const handleBooking = async () => {
     if (isBooking) return;
 
-    if (!isUp2You && (!selectedDate || !selectedTime)) {
+    if (!isWhatsAppOnly && (!selectedDate || !selectedTime)) {
       alert('Por favor, selecione uma data e horário primeiro.');
       setStep(2);
       return;
@@ -238,8 +241,8 @@ export default function Home() {
     setIsBooking(true);
     
     try {
-      const bookingDate = isUp2You ? format(new Date(), 'yyyy-MM-dd') : selectedDate!;
-      const bookingTime = isUp2You ? 'PRESENCIAL' : selectedTime!;
+      const bookingDate = isWhatsAppOnly ? format(new Date(), 'yyyy-MM-dd') : selectedDate!;
+      const bookingTime = isWhatsAppOnly ? 'PRESENCIAL' : selectedTime!;
       const bookingId = `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
       
       const booking: Booking = {
@@ -248,17 +251,17 @@ export default function Home() {
         whatsapp: formData.whatsapp,
         date: bookingDate,
         time: bookingTime,
-        type: isUp2You ? 'presencial' : 'online',
-        localId: isUp2You ? 'presencial' : 'online',
-        status: isUp2You ? 'Lead WhatsApp' : 'Pendente',
+        type: isWhatsAppOnly ? 'presencial' : 'online',
+        localId: isWhatsAppOnly ? 'presencial' : 'online',
+        status: isWhatsAppOnly ? 'Lead WhatsApp' : 'Pendente',
         createdAt: new Date().toISOString(),
         planoId: selectedPlan?.name || 'Consulta Avulsa'
       };
 
       // WhatsApp Message Preparation
       let message = '';
-      if (isUp2You) {
-        message = `Olá! Tenho interesse no atendimento presencial na Up2You:\n\n👤 *Paciente:* ${formData.name}\n💼 *Plano:* ${selectedPlan?.name || 'Consulta Avulsa'}\n💳 *Pagamento:* ${paymentMethod === 'pix' ? 'PIX' : 'Link de Pagamento'}\n\nGostaria de conferir os horários disponíveis.`;
+      if (isWhatsAppOnly) {
+        message = `Olá! Tenho interesse no atendimento presencial na ${selectedLocal?.name}:\n\n👤 *Paciente:* ${formData.name}\n💼 *Plano:* ${selectedPlan?.name || 'Consulta Avulsa'}\n💳 *Pagamento:* ${paymentMethod === 'pix' ? 'PIX' : 'Link de Pagamento'}\n\nGostaria de conferir os horários disponíveis.`;
       } else {
         message = `Olá! Requisitei um agendamento no site:\n\n👤 *Paciente:* ${formData.name}\n📅 *Data:* ${format(new Date(selectedDate + 'T12:00:00'), 'dd/MM/yyyy')}\n⏰ *Hora:* ${selectedTime}\n💼 *Plano:* ${selectedPlan?.name || 'Consulta Avulsa'}\n📍 *Local:* ${mode === 'online' ? 'Online' : (selectedLocal?.name || 'Presencial')}\n💳 *Pagamento:* ${paymentMethod === 'pix' ? 'PIX' : 'Link de Pagamento'}\n\nAguardo a confirmação e os dados para pagamento.`;
       }
@@ -353,22 +356,62 @@ export default function Home() {
                   </span>
                 </button>
 
-                <a 
-                  href="https://www.google.com/maps/search/?api=1&query=R.+Jaragu%C3%A1,+604+-+Am%C3%A9rica,+Joinville+-+SC,+89204-650"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full bg-white border border-slate-100 p-6 rounded-[2rem] shadow-sm hover:shadow-md hover:border-primary/30 transition-all flex items-center justify-center gap-4 group"
-                >
-                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary transition-colors">
-                    <MapPin className="w-5 h-5 text-primary group-hover:text-white" />
-                  </div>
-                  <div className="text-left">
-                    <span className="block font-display text-xl text-primary leading-none">Localização</span>
-                    <span className="text-[11px] font-display text-slate-400 mt-1 block">
-                      Consultório sob agendamento
-                    </span>
-                  </div>
-                </a>
+                {/* Localização Expandable Card */}
+                <div className="w-full">
+                  <button 
+                    onClick={() => setShowLocations(!showLocations)}
+                    className={cn(
+                      "w-full bg-white border border-slate-100 p-6 rounded-[2rem] shadow-sm hover:shadow-md hover:border-primary/30 transition-all flex items-center justify-center relative group",
+                      showLocations && "rounded-b-none border-b-transparent shadow-none"
+                    )}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary transition-colors">
+                        <MapPin className="w-5 h-5 text-primary group-hover:text-white" />
+                      </div>
+                      <div className="text-center">
+                        <span className="block font-display text-xl text-primary leading-none">Localização</span>
+                        <span className="text-[11px] font-display text-slate-400 mt-1 block">
+                          Consultório sob agendamento
+                        </span>
+                      </div>
+                    </div>
+                    <ChevronDown className={cn("absolute right-8 w-5 h-5 text-slate-400 transition-transform duration-300", showLocations && "rotate-180")} />
+                  </button>
+
+                  <motion.div
+                    initial={false}
+                    animate={{ 
+                      height: showLocations ? 'auto' : 0,
+                      opacity: showLocations ? 1 : 0
+                    }}
+                    className="overflow-hidden bg-white border border-slate-100 border-t-0 rounded-b-[2rem] shadow-md"
+                  >
+                    <div className="p-2 space-y-1">
+                      <a 
+                        href="https://www.google.com/maps/search/?api=1&query=R.+Jaragu%C3%A1,+604+-+Am%C3%A9rica,+Joinville+-+SC,+89204-650"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex flex-col gap-1 p-4 hover:bg-primary/5 rounded-2xl transition-colors group"
+                      >
+                        <span className="font-display text-lg text-primary leading-none group-hover:translate-x-1 transition-transform text-left">Up2You Clinical (América)</span>
+                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider text-left">R. Jaraguá, 604 - Joinville</span>
+                      </a>
+                      
+                      <div className="h-px bg-slate-50 mx-4" />
+
+                      <a 
+                        href="https://maps.app.goo.gl/rzxfaE9X3kbccFu88"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex flex-col gap-1 p-4 hover:bg-primary/5 rounded-2xl transition-colors group"
+                      >
+                        <span className="font-display text-lg text-primary leading-none group-hover:translate-x-1 transition-transform text-left">Ânima Movimento e Bem Estar (Aventureiro)</span>
+                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider text-left">Rua: Tuiuti, 2295 - Joinville</span>
+                      </a>
+                    </div>
+                  </motion.div>
+                </div>
 
                 <a 
                   href={`https://wa.me/${settings.whatsappNumber.replace(/\D/g, '')}`}
@@ -677,12 +720,12 @@ export default function Home() {
                     >
                       <h2 className="font-display text-3xl text-primary">Onde deseja o atendimento?</h2>
                       <div className="grid grid-cols-1 gap-4">
-                        {locais.map(l => (
+                        {presencialLocais.map(l => (
                           <button 
                             key={l.id}
                             onClick={() => { 
                               setSelectedLocal(l); 
-                              if (l.name.toLowerCase().includes('up2you')) {
+                              if (l.name.toLowerCase().includes('up2you') || l.name.toLowerCase().includes('ânima')) {
                                 setStep(4); // Skip to form
                               } else {
                                 setStep(2); 
@@ -833,20 +876,20 @@ export default function Home() {
                       className="space-y-10"
                     >
                         <div className="text-center space-y-4">
-                           <div className={cn("w-16 h-16 rounded-full flex items-center justify-center mx-auto", isUp2You ? "bg-[#25D366]/10 text-[#128C7E]" : "bg-primary/10 text-primary")}>
-                              {isUp2You ? <MessageCircle className="w-8 h-8" /> : <Sparkles className="w-8 h-8" />}
+                           <div className={cn("w-16 h-16 rounded-full flex items-center justify-center mx-auto", isWhatsAppOnly ? "bg-[#25D366]/10 text-[#128C7E]" : "bg-primary/10 text-primary")}>
+                              {isWhatsAppOnly ? <MessageCircle className="w-8 h-8" /> : <Sparkles className="w-8 h-8" />}
                            </div>
                            <div>
-                              <h2 className="font-display text-4xl">{isUp2You ? 'Consulte os horários disponíveis no WhatsApp' : 'Finalizar e Agendar'}</h2>
+                              <h2 className="font-display text-4xl">{isWhatsAppOnly ? 'Consulte os horários disponíveis no WhatsApp' : 'Finalizar e Agendar'}</h2>
                               <p className="text-slate-500 mt-2 text-sm">
-                                {isUp2You 
+                                {isWhatsAppOnly 
                                   ? 'Preencha seus dados para consultar os horários disponíveis diretamente com a nutricionista.' 
                                   : 'Preencha seus dados para finalizarmos sua solicitação.'}
                               </p>
                            </div>
                         </div>
 
-                        <div className={cn("bg-white border-2 rounded-[3rem] p-8 shadow-2xl space-y-8 relative overflow-hidden", isUp2You ? "border-[#25D366]" : "border-primary")}>
+                        <div className={cn("bg-white border-2 rounded-[3rem] p-8 shadow-2xl space-y-8 relative overflow-hidden", isWhatsAppOnly ? "border-[#25D366]" : "border-primary")}>
                            <div className="space-y-8">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
@@ -878,11 +921,11 @@ export default function Home() {
                                      onClick={() => setPaymentMethod('pix')}
                                      className={cn(
                                        "p-5 rounded-2xl border-2 transition-all flex flex-col items-center gap-2",
-                                       paymentMethod === 'pix' ? (isUp2You ? "border-[#25D366] bg-[#25D366]/5" : "border-primary bg-primary/5") : "border-slate-100 bg-slate-50 opacity-60"
+                                       paymentMethod === 'pix' ? (isWhatsAppOnly ? "border-[#25D366] bg-[#25D366]/5" : "border-primary bg-primary/5") : "border-slate-100 bg-slate-50 opacity-60"
                                      )}
                                    >
-                                      <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", paymentMethod === 'pix' ? (isUp2You ? "border-[#25D366]" : "border-primary") : "border-slate-300")}>
-                                         {paymentMethod === 'pix' && <div className={cn("w-2.5 h-2.5 rounded-full", isUp2You ? "bg-[#25D366]" : "bg-primary")} />}
+                                      <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", paymentMethod === 'pix' ? (isWhatsAppOnly ? "border-[#25D366]" : "border-primary") : "border-slate-300")}>
+                                         {paymentMethod === 'pix' && <div className={cn("w-2.5 h-2.5 rounded-full", isWhatsAppOnly ? "bg-[#25D366]" : "bg-primary")} />}
                                       </div>
                                       <span className="text-xs font-bold uppercase tracking-widest">PIX</span>
                                    </button>
@@ -890,20 +933,20 @@ export default function Home() {
                                      onClick={() => setPaymentMethod('link')}
                                      className={cn(
                                        "p-5 rounded-2xl border-2 transition-all flex flex-col items-center gap-2",
-                                       paymentMethod === 'link' ? (isUp2You ? "border-[#25D366] bg-[#25D366]/5" : "border-primary bg-primary/5") : "border-slate-100 bg-slate-50 opacity-60"
+                                       paymentMethod === 'link' ? (isWhatsAppOnly ? "border-[#25D366] bg-[#25D366]/5" : "border-primary bg-primary/5") : "border-slate-100 bg-slate-50 opacity-60"
                                      )}
                                    >
-                                      <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", paymentMethod === 'link' ? (isUp2You ? "border-[#25D366]" : "border-primary") : "border-slate-300")}>
-                                         {paymentMethod === 'link' && <div className={cn("w-2.5 h-2.5 rounded-full", isUp2You ? "bg-[#25D366]" : "bg-primary")} />}
+                                      <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", paymentMethod === 'link' ? (isWhatsAppOnly ? "border-[#25D366]" : "border-primary") : "border-slate-300")}>
+                                         {paymentMethod === 'link' && <div className={cn("w-2.5 h-2.5 rounded-full", isWhatsAppOnly ? "bg-[#25D366]" : "bg-primary")} />}
                                       </div>
                                       <span className="text-xs font-bold uppercase tracking-widest text-center">Link de Pagamento</span>
                                    </button>
                                 </div>
                               </div>
 
-                              <div className={cn("p-6 bg-slate-50 rounded-3xl border", isUp2You ? "border-[#25D366]/20" : "border-primary/10")}>
+                              <div className={cn("p-6 bg-slate-50 rounded-3xl border", isWhatsAppOnly ? "border-[#25D366]/20" : "border-primary/10")}>
                                  <p className="text-[10px] text-slate-500 leading-relaxed font-bold text-center uppercase tracking-wider">
-                                   {isUp2You 
+                                   {isWhatsAppOnly 
                                     ? 'A consulta será reservada mediante pagamento antecipado. Os dados para pagamento serão enviados no WhatsApp após a confirmação do horário escolhido.' 
                                     : 'A consulta será reservada mediante pagamento antecipado. Os dados para pagamento serão enviados no WhatsApp informado junto com a confirmação de agendamento.'}
                                  </p>
@@ -914,10 +957,10 @@ export default function Home() {
                                 disabled={!formData.name || !formData.whatsapp || isBooking}
                                 className={cn(
                                   "w-full py-6 rounded-2xl font-bold uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 disabled:opacity-50 transition-transform active:scale-95",
-                                  isUp2You ? "bg-[#25D366] text-white shadow-green-100" : "bg-primary text-white shadow-primary/20"
+                                  isWhatsAppOnly ? "bg-[#25D366] text-white shadow-green-100" : "bg-primary text-white shadow-primary/20"
                                 )}
                               >
-                                {isBooking ? 'Iniciando...' : (isUp2You ? 'Ir para WhatsApp' : 'Finalizar Agendamento')} <ArrowRight className="w-5 h-5" />
+                                {isBooking ? 'Iniciando...' : (isWhatsAppOnly ? 'Ir para WhatsApp' : 'Finalizar Agendamento')} <ArrowRight className="w-5 h-5" />
                               </button>
                            </div>
                         </div>
