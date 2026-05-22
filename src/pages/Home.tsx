@@ -215,6 +215,17 @@ export default function Home() {
     return filteredSlots;
   };
 
+  const localHasAvailableSlots = (localId: string) => {
+    // Check next 15 days if there are any slots configured
+    for (let i = 0; i < 15; i++) {
+      const d = format(addDays(new Date(), i), 'yyyy-MM-dd');
+      if (getSlotsForDate(d, localId).length > 0) {
+        return true;
+      }
+    }
+    return false;
+  };
+
   const handleStartBooking = (plan?: any) => {
     setSelectedPlan(plan || null);
     setView('booking');
@@ -223,9 +234,7 @@ export default function Home() {
 
   const presencialLocais = locais.filter(l => l.id !== 'online');
 
-  const isWhatsAppOnly = selectedLocal?.name.toLowerCase().includes('up2you') || 
-                         selectedLocal?.name.toLowerCase().includes('ânima') || 
-                         selectedLocal?.name.toLowerCase().includes('sculptée');
+  const isWhatsAppOnly = mode === 'presencial' && selectedLocal ? !localHasAvailableSlots(selectedLocal.id) : false;
 
   const handleBooking = async () => {
     if (isBooking) return;
@@ -254,8 +263,8 @@ export default function Home() {
         whatsapp: formData.whatsapp,
         date: bookingDate,
         time: bookingTime,
-        type: isWhatsAppOnly ? 'presencial' : 'online',
-        localId: isWhatsAppOnly ? 'presencial' : 'online',
+        type: mode === 'online' ? 'online' : 'presencial',
+        localId: mode === 'online' ? 'online' : (selectedLocal?.id || 'presencial'),
         status: isWhatsAppOnly ? 'Lead WhatsApp' : 'Pendente',
         createdAt: new Date().toISOString(),
         planoId: selectedPlan?.name || 'Consulta Avulsa'
@@ -264,9 +273,9 @@ export default function Home() {
       // WhatsApp Message Preparation
       let message = '';
       if (isWhatsAppOnly) {
-        message = `Olá! Tenho interesse no atendimento presencial na ${selectedLocal?.name}:\n\n👤 *Paciente:* ${formData.name}\n💼 *Plano:* ${selectedPlan?.name || 'Consulta Avulsa'}\n💳 *Pagamento:* ${paymentMethod === 'pix' ? 'PIX' : 'Link de Pagamento'}\n\nGostaria de conferir os horários disponíveis.`;
+        message = `Olá! Tenho interesse no atendimento presencial na ${selectedLocal?.name}:\n\n👤 *Paciente:* ${formData.name}\n💼 *Plano:* ${selectedPlan?.name || 'Consulta Avulsa'}\n\nGostaria de conferir os horários disponíveis.`;
       } else {
-        message = `Olá! Requisitei um agendamento no site:\n\n👤 *Paciente:* ${formData.name}\n📅 *Data:* ${format(new Date(selectedDate + 'T12:00:00'), 'dd/MM/yyyy')}\n⏰ *Hora:* ${selectedTime}\n💼 *Plano:* ${selectedPlan?.name || 'Consulta Avulsa'}\n📍 *Local:* ${mode === 'online' ? 'Online' : (selectedLocal?.name || 'Presencial')}\n💳 *Pagamento:* ${paymentMethod === 'pix' ? 'PIX' : 'Link de Pagamento'}\n\nAguardo a confirmação e os dados para pagamento.`;
+        message = `Olá! Requisitei um agendamento no site:\n\n👤 *Paciente:* ${formData.name}\n📅 *Data:* ${format(new Date(selectedDate + 'T12:00:00'), 'dd/MM/yyyy')}\n⏰ *Hora:* ${selectedTime}\n💼 *Plano:* ${selectedPlan?.name || 'Consulta Avulsa'}\n📍 *Local:* ${mode === 'online' ? 'Online' : (selectedLocal?.name || 'Presencial')}\n\nAguardo a confirmação do agendamento.`;
       }
       
       const sanitizedPhone = settings.whatsappNumber.replace(/\D/g, '');
@@ -735,33 +744,44 @@ export default function Home() {
                     >
                       <h2 className="font-display text-3xl text-primary">Onde deseja o atendimento?</h2>
                       <div className="grid grid-cols-1 gap-4">
-                        {presencialLocais.map(l => (
-                          <button 
-                            key={l.id}
-                            onClick={() => { 
-                              setSelectedLocal(l); 
-                              if (l.name.toLowerCase().includes('up2you') || 
-                                  l.name.toLowerCase().includes('ânima') || 
-                                  l.name.toLowerCase().includes('sculptée')) {
-                                setStep(4); // Skip to form
-                              } else {
-                                setStep(2); 
-                              }
-                            }}
-                            className="w-full p-8 bg-white border border-slate-100 rounded-[3rem] text-left hover:border-primary transition-all flex items-center justify-between group shadow-sm"
-                          >
-                            <div className="flex items-center gap-6">
-                               <div className="p-4 bg-primary/5 text-primary rounded-2xl group-hover:bg-primary group-hover:text-white transition-colors">
-                                  <MapPin className="w-6 h-6" />
-                               </div>
-                               <div>
-                                <span className="block font-display text-2xl">{l.name}</span>
-                                <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">{l.address}</span>
+                        {presencialLocais.map(l => {
+                          const hasAvailableSlots = localHasAvailableSlots(l.id);
+                          return (
+                            <button 
+                              key={l.id}
+                              onClick={() => { 
+                                setSelectedLocal(l); 
+                                if (hasAvailableSlots) {
+                                  setStep(2); 
+                                } else {
+                                  setStep(4); // Skip to form for WhatsApp consultation
+                                }
+                              }}
+                              className="w-full p-8 bg-white border border-slate-100 rounded-[3rem] text-left hover:border-primary transition-all flex items-center justify-between group shadow-sm"
+                            >
+                              <div className="flex items-center gap-6">
+                                 <div className="p-4 bg-primary/5 text-primary rounded-2xl group-hover:bg-primary group-hover:text-white transition-colors">
+                                    <MapPin className="w-6 h-6" />
+                                 </div>
+                                 <div className="space-y-1">
+                                  <span className="block font-display text-2xl">{l.name}</span>
+                                  <span className="text-xs text-slate-400 font-bold uppercase tracking-widest block">{l.address}</span>
+                                  {hasAvailableSlots ? (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 rounded-full border border-emerald-100">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                      Horários disponíveis
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold text-slate-500 bg-slate-50 rounded-full border border-slate-100">
+                                      Consultar no WhatsApp
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                            <ChevronRight className="w-6 h-6 text-slate-200" />
-                          </button>
-                        ))}
+                              <ChevronRight className="w-6 h-6 text-slate-200" />
+                            </button>
+                          );
+                        })}
                       </div>
                     </motion.div>
                   )}
@@ -929,44 +949,6 @@ export default function Home() {
                                     onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
                                   />
                                 </div>
-                              </div>
-
-                              <div className="space-y-4">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-2">Forma de Pagamento Preferida</label>
-                                <div className="grid grid-cols-2 gap-4">
-                                   <button 
-                                     onClick={() => setPaymentMethod('pix')}
-                                     className={cn(
-                                       "p-5 rounded-2xl border-2 transition-all flex flex-col items-center gap-2",
-                                       paymentMethod === 'pix' ? (isWhatsAppOnly ? "border-[#25D366] bg-[#25D366]/5" : "border-primary bg-primary/5") : "border-slate-100 bg-slate-50 opacity-60"
-                                     )}
-                                   >
-                                      <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", paymentMethod === 'pix' ? (isWhatsAppOnly ? "border-[#25D366]" : "border-primary") : "border-slate-300")}>
-                                         {paymentMethod === 'pix' && <div className={cn("w-2.5 h-2.5 rounded-full", isWhatsAppOnly ? "bg-[#25D366]" : "bg-primary")} />}
-                                      </div>
-                                      <span className="text-xs font-bold uppercase tracking-widest">PIX</span>
-                                   </button>
-                                   <button 
-                                     onClick={() => setPaymentMethod('link')}
-                                     className={cn(
-                                       "p-5 rounded-2xl border-2 transition-all flex flex-col items-center gap-2",
-                                       paymentMethod === 'link' ? (isWhatsAppOnly ? "border-[#25D366] bg-[#25D366]/5" : "border-primary bg-primary/5") : "border-slate-100 bg-slate-50 opacity-60"
-                                     )}
-                                   >
-                                      <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", paymentMethod === 'link' ? (isWhatsAppOnly ? "border-[#25D366]" : "border-primary") : "border-slate-300")}>
-                                         {paymentMethod === 'link' && <div className={cn("w-2.5 h-2.5 rounded-full", isWhatsAppOnly ? "bg-[#25D366]" : "bg-primary")} />}
-                                      </div>
-                                      <span className="text-xs font-bold uppercase tracking-widest text-center">Link de Pagamento</span>
-                                   </button>
-                                </div>
-                              </div>
-
-                              <div className={cn("p-6 bg-slate-50 rounded-3xl border", isWhatsAppOnly ? "border-[#25D366]/20" : "border-primary/10")}>
-                                 <p className="text-[10px] text-slate-500 leading-relaxed font-bold text-center uppercase tracking-wider">
-                                   {isWhatsAppOnly 
-                                    ? 'A consulta será reservada mediante pagamento antecipado. Os dados para pagamento serão enviados no WhatsApp após a confirmação do horário escolhido.' 
-                                    : 'A consulta será reservada mediante pagamento antecipado. Os dados para pagamento serão enviados no WhatsApp informado junto com a confirmação de agendamento.'}
-                                 </p>
                               </div>
 
                               <button 
