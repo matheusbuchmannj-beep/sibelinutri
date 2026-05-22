@@ -7,8 +7,7 @@ import {
   Menu, 
   X,
   Apple,
-  CreditCard,
-  Utensils,
+  Users,
   LogOut
 } from 'lucide-react';
 import { useState } from 'react';
@@ -34,10 +33,8 @@ export default function DashboardLayout() {
   const navItems = [
     { to: '/admin', label: 'Início', icon: LayoutDashboard, end: true },
     { to: '/admin/agenda', label: 'Agenda Diária', icon: Calendar },
+    { to: '/admin/pacientes', label: 'Pacientes', icon: Users },
     { to: '/admin/locais', label: 'Locais', icon: MapPin },
-    { to: '/admin/alimentos', label: 'Banco de Alimentos', icon: Utensils },
-    { to: '/admin/dietas', label: 'Planos Alimentares', icon: Apple },
-    { to: '/admin/planos', label: 'Preços de Consulta', icon: CreditCard },
     { to: '/admin/config', label: 'Landing Page', icon: SettingsIcon },
   ];
 

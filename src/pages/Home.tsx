@@ -75,9 +75,10 @@ const PLANS_ONLINE = [
     features: [
       '3 consultas online (1/mês)',
       'Plano alimentar personalizado com ajustes mensais',
-      'Suporte via WhatsApp',
-      'Análise de exames (quando necessário)',
-      'Material de apoio'
+      'Suporte via WhatsApp contínuo',
+      'Análise de exames (quando necessário) e Ajuste correspondente',
+      'Ajustes adicionais de receitas e plano alimentar',
+      'Material de apoio focado na sua rotina de metas'
     ]
   },
   { 
@@ -222,7 +223,9 @@ export default function Home() {
 
   const presencialLocais = locais.filter(l => l.id !== 'online');
 
-  const isWhatsAppOnly = selectedLocal?.name.toLowerCase().includes('up2you') || selectedLocal?.name.toLowerCase().includes('ânima');
+  const isWhatsAppOnly = selectedLocal?.name.toLowerCase().includes('up2you') || 
+                         selectedLocal?.name.toLowerCase().includes('ânima') || 
+                         selectedLocal?.name.toLowerCase().includes('sculptée');
 
   const handleBooking = async () => {
     if (isBooking) return;
@@ -408,6 +411,18 @@ export default function Home() {
                       >
                         <span className="font-display text-lg text-primary leading-none group-hover:translate-x-1 transition-transform text-left">Ânima Movimento e Bem Estar (Aventureiro)</span>
                         <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider text-left">Rua: Tuiuti, 2295 - Joinville</span>
+                      </a>
+
+                      <div className="h-px bg-slate-50 mx-4" />
+
+                      <a 
+                        href="https://maps.app.goo.gl/9WikRi2WjTLgs4K1A"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex flex-col gap-1 p-4 hover:bg-primary/5 rounded-2xl transition-colors group"
+                      >
+                        <span className="font-display text-lg text-primary leading-none group-hover:translate-x-1 transition-transform text-left">Sculptée Estética Avançada (Iririú)</span>
+                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider text-left">R. Jorge Augusto Emílio Müller, n° 82 - sala 02 - Joinville</span>
                       </a>
                     </div>
                   </motion.div>
@@ -725,7 +740,9 @@ export default function Home() {
                             key={l.id}
                             onClick={() => { 
                               setSelectedLocal(l); 
-                              if (l.name.toLowerCase().includes('up2you') || l.name.toLowerCase().includes('ânima')) {
+                              if (l.name.toLowerCase().includes('up2you') || 
+                                  l.name.toLowerCase().includes('ânima') || 
+                                  l.name.toLowerCase().includes('sculptée')) {
                                 setStep(4); // Skip to form
                               } else {
                                 setStep(2); 

@@ -32,7 +32,8 @@ const DEFAULT_SETTINGS: Settings = {
 const DEFAULT_LOCAIS: Local[] = [
   { id: 'online', name: 'Atendimento Online', address: 'Via Google Meet / WhatsApp', mapsLink: '' },
   { id: '2', name: 'Up2You Clinical', address: 'R. Jaraguá, 604 - América, Joinville - SC, 89204-650', mapsLink: 'https://maps.app.goo.gl/XWCy92EWcgtu5cRn7' },
-  { id: '3', name: 'Ânima Movimento e Bem Estar', address: 'Rua: Tuiuti, 2295 - Aventureiro, Joinville - SC', mapsLink: 'https://maps.app.goo.gl/rzxfaE9X3kbccFu88' }
+  { id: '3', name: 'Ânima Movimento e Bem Estar', address: 'Rua: Tuiuti, 2295 - Aventureiro, Joinville - SC', mapsLink: 'https://maps.app.goo.gl/rzxfaE9X3kbccFu88' },
+  { id: '4', name: 'Sculptée Estética Avançada', address: 'R. Jorge Augusto Emílio Müller, n° 82 - sala 02 - Iririú, Joinville - SC, 89227-310', mapsLink: 'https://maps.app.goo.gl/9WikRi2WjTLgs4K1A' }
 ];
 
 const DEFAULT_PLANOS: Plano[] = [
@@ -66,19 +67,24 @@ export async function fetchLocais(): Promise<Local[]> {
   try {
     const locais = await getCollection<Local>('locais');
     
-    // Check if any default local is missing and add it if so
+    // Check if any default local is missing or has an outdated mapsLink, and update it
     let updated = false;
     for (const dl of DEFAULT_LOCAIS) {
       if (dl.id === 'online') continue;
-      if (!locais.find(l => l.id === dl.id)) {
+      const existing = locais.find(l => l.id === dl.id);
+      if (!existing) {
         await setDoc(doc(db, 'locais', dl.id), dl);
         locais.push(dl);
+        updated = true;
+      } else if (existing.mapsLink !== dl.mapsLink) {
+        await setDoc(doc(db, 'locais', dl.id), dl);
+        existing.mapsLink = dl.mapsLink;
         updated = true;
       }
     }
     
     if (updated) {
-      console.log('Bootstrapped missing default locations');
+      console.log('Bootstrapped or updated default locations successfully');
     }
 
     return locais.length > 0 ? locais : DEFAULT_LOCAIS;
@@ -237,38 +243,142 @@ export async function updateSheetData(range: string, values: any[][]) {
   
   if (range.includes('Locais')) {
     const batch = writeBatch(db);
+    
+    // Deletion check
+    try {
+      const liveLocaisSnap = await getDocs(collection(db, 'locais'));
+      const activeIds = new Set(values.map(v => v[0]).filter(Boolean));
+      liveLocaisSnap.forEach(docSnap => {
+        if (!activeIds.has(docSnap.id) && docSnap.id !== 'online') {
+          batch.delete(docSnap.ref);
+        }
+      });
+    } catch (e) {
+      console.warn('Error fetching locais for sync-delete:', e);
+    }
+
     for (const v of values) {
       if (v[0]) {
         const lRef = doc(db, 'locais', v[0]);
-        batch.set(lRef, { id: v[0], name: v[1], address: v[2], mapsLink: v[3] });
+        batch.set(lRef, { id: v[0], name: v[1], address: v[2], mapsLink: v[3] || '' });
+      }
+    }
+    return batch.commit();
+  }
+
+  if (range.includes('Planos')) {
+    const batch = writeBatch(db);
+    
+    // Deletion check
+    try {
+      const livePlanosSnap = await getDocs(collection(db, 'planos'));
+      const activeIds = new Set(values.map(v => v[0]).filter(Boolean));
+      livePlanosSnap.forEach(docSnap => {
+        if (!activeIds.has(docSnap.id)) {
+          batch.delete(docSnap.ref);
+        }
+      });
+    } catch (e) {
+      console.warn('Error fetching planos for sync-delete:', e);
+    }
+
+    for (const v of values) {
+      if (v[0]) {
+        const pRef = doc(db, 'planos', v[0]);
+        batch.set(pRef, { id: v[0], titulo: v[1] || '', descricao: v[2] || '', preco: v[3] || '', duracao: v[4] || '' });
+      }
+    }
+    return batch.commit();
+  }
+
+  if (range.includes('Alimentos')) {
+    const batch = writeBatch(db);
+    
+    // Deletion check
+    try {
+      const liveFoodSnap = await getDocs(collection(db, 'alimentos'));
+      const activeIds = new Set(values.map(v => v[0]).filter(Boolean));
+      liveFoodSnap.forEach(docSnap => {
+        if (!activeIds.has(docSnap.id)) {
+          batch.delete(docSnap.ref);
+        }
+      });
+    } catch (e) {
+      console.warn('Error fetching alimentos for sync-delete:', e);
+    }
+
+    for (const v of values) {
+      if (v[0]) {
+        const aRef = doc(db, 'alimentos', v[0]);
+        batch.set(aRef, {
+          id: v[0],
+          nome: v[1] || '',
+          categoria: v[2] || '',
+          calorias: Number(v[3]) || 0,
+          unidade: v[4] || '',
+          imagem: v[5] || '',
+          carboidratos: Number(v[6]) || 0,
+          proteinas: Number(v[7]) || 0,
+          gorduras: Number(v[8]) || 0,
+          fibra: Number(v[9]) || 0
+        });
       }
     }
     return batch.commit();
   }
 
   if (range.includes('Horarios')) {
-    const batch = writeBatch(db);
-    // Get current keys to identify what needs to be deleted if not in values
-    // For simplicity, we'll just set what we have. 
-    // To handle deletions, we'd need to know the full set of dates being managed.
+    const suppliedKeys = new Set<string>();
+    const allOperations: Array<{ type: 'set' | 'delete', ref: any, data?: any }> = [];
+    
     for (const [date, lid, slotsStr] of values) {
-      if (date && lid) {
+      if (date && lid && slotsStr) {
         const hId = `${date}_${lid}`;
+        suppliedKeys.add(hId);
         const hRef = doc(db, 'horarios', hId);
         const slots = slotsStr.split(',').map((s: string) => s.trim()).filter((s: string) => s !== '');
         
         if (slots.length > 0) {
-          batch.set(hRef, { 
-            date, 
-            localId: lid, 
-            slots: slots
+          allOperations.push({
+            type: 'set',
+            ref: hRef,
+            data: { date, localId: lid, slots }
           });
-        } else {
-          batch.delete(hRef);
         }
       }
     }
-    return batch.commit();
+
+    // Fetch and remove existing documents that are no longer in the updated data
+    try {
+      const snap = await getDocs(collection(db, 'horarios'));
+      snap.forEach(docSnap => {
+        if (!suppliedKeys.has(docSnap.id)) {
+          allOperations.push({
+            type: 'delete',
+            ref: docSnap.ref
+          });
+        }
+      });
+    } catch (e) {
+      console.warn('Error syncing and cleaning up old scheduling records:', e);
+    }
+
+    // Write-batch execution with safety limits chunking (200 docs max per batch)
+    const chunkSize = 200;
+    for (let i = 0; i < allOperations.length; i += chunkSize) {
+      const chunk = allOperations.slice(i, i + chunkSize);
+      const batch = writeBatch(db);
+      for (const op of chunk) {
+        if (op.type === 'set') {
+          batch.set(op.ref, op.data);
+        } else if (op.type === 'delete') {
+          batch.delete(op.ref);
+        }
+      }
+      await batch.commit();
+    }
+    
+    return { ok: true };
   }
 
   return { ok: true };
@@ -276,7 +386,19 @@ export async function updateSheetData(range: string, values: any[][]) {
 
 // Keep other functions as stubs or refactor as needed
 export async function clearSheetData(range: string) { return { ok: true }; }
-export async function appendSheetData(range: string, values: any[][]) { return { ok: true }; }
+export async function appendSheetData(range: string, values: any[][]) {
+  if (range.includes('Locais')) {
+    const batch = writeBatch(db);
+    for (const v of values) {
+      if (v[0]) {
+        const lRef = doc(db, 'locais', v[0]);
+        batch.set(lRef, { id: v[0], name: v[1], address: v[2], mapsLink: v[3] || '' });
+      }
+    }
+    await batch.commit();
+  }
+  return { ok: true };
+}
 export async function confirmAgendamento(rowIndex: number, booking: any) { return { ok: true }; }
 export async function saveDieta(dieta: Dieta) {
   const id = dieta.id || Math.random().toString(36).substr(2, 9);
