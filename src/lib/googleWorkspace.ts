@@ -8,7 +8,7 @@ import { db, saveDocument, getCollection, subscribeToCollection, subscribeToDocu
 import { doc, setDoc, getDoc, collection, getDocs, query, where, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 
 // Default values for initial setup
-const DEFAULT_SETTINGS: Settings = {
+export const DEFAULT_SETTINGS: Settings = {
   brandName: 'Sibeli Farias',
   crn: '10.2030/P',
   heroTitle: 'Nutrição que transforma hábitos',
@@ -26,7 +26,69 @@ const DEFAULT_SETTINGS: Settings = {
   aboutText: 'Sou nutricionista apaixonada por ajudar pessoas a alcançarem seus objetivos através de uma alimentação consciente e prazerosa.',
   specialtiesTitle: 'Minhas Especialidades',
   plansTitle: 'Nossos Planos',
-  plansSubtitle: 'Escolha a melhor opção para sua jornada'
+  plansSubtitle: 'Escolha a melhor opção para sua jornada',
+  onlineConsultations: [
+    {
+      id: 'online-1',
+      title: '1ª CONSULTA (online)',
+      tag: 'Online · via videochamada',
+      priceInstallments: '2x de R$74,00',
+      priceCash: 'ou R$148,00 à vista',
+      features: [
+        'Consulta individual (60 minutos)',
+        'Anamnese alimentar completa e análise do histórico de saúde',
+        'Plano alimentar personalizado enviado em até 48h',
+        'Orientações práticas para rotina alimentar',
+        'Suporte via WhatsApp por 30 dias após a consulta'
+      ]
+    },
+    {
+      id: 'online-2',
+      title: 'Consulta Avulsa',
+      tag: 'Online · via videochamada',
+      priceInstallments: '2X DE R$90,00 NO CARTÃO DE CRÉDITO',
+      priceCash: '190 A VISTA.',
+      features: [
+        'Consulta individual (60 minutos)',
+        'Anamnese alimentar completa e análise do histórico de saúde',
+        'Plano alimentar personalizado enviado em até 48h',
+        'Orientações práticas para rotina alimentar',
+        'Suporte via WhatsApp por 30 dias após a consulta.'
+      ]
+    }
+  ],
+  presencialConsultations: [
+    {
+      id: 'presencial-1',
+      title: 'Consulta Presencial',
+      tag: 'Presencial · no consultório',
+      priceInstallments: '2x de R$125,00 sem juros',
+      priceCash: 'ou R$250,00 à vista',
+      features: [
+        'Consulta individual com duração de 60 minutos',
+        'Anamnese alimentar e avaliação física completa',
+        'Aferições corporais (peso, medidas e bioimpedância)',
+        'Plano alimentar personalizado entregue em até 48h',
+        'Orientações práticas para facilitar sua rotina alimentar',
+        'Suporte via WhatsApp por 30 dias após a consulta'
+      ]
+    },
+    {
+      id: 'presencial-2',
+      title: 'Consulta de Retorno',
+      tag: 'Presencial · no consultório',
+      priceInstallments: '2x de R$140,00 sem juros',
+      priceCash: 'ou R$280,00 à vista',
+      features: [
+        'Consulta individual com duração de 60 minutos',
+        'Reavaliação alimentar e física',
+        'Aferições corporais (peso, medidas e bioimpedância)',
+        'Atualização do plano alimentar conforme sua evolução',
+        'Orientações práticas para continuidade do acompanhamento',
+        'Suporte via WhatsApp por 30 dias após a consulta'
+      ]
+    }
+  ]
 };
 
 const DEFAULT_LOCAIS: Local[] = [
@@ -45,13 +107,22 @@ const DEFAULT_PLANOS: Plano[] = [
 
 export const getAccessToken = async () => 'handled_by_firebase';
 
+export function mergeSettingsWithDefaults(data: any): Settings {
+  return {
+    ...DEFAULT_SETTINGS,
+    ...data,
+    onlineConsultations: data?.onlineConsultations !== undefined ? data.onlineConsultations : DEFAULT_SETTINGS.onlineConsultations,
+    presencialConsultations: data?.presencialConsultations !== undefined ? data.presencialConsultations : DEFAULT_SETTINGS.presencialConsultations,
+  };
+}
+
 export async function fetchSettings(): Promise<Settings> {
   const docRef = doc(db, 'config', 'settings');
   try {
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {
-      return { ...DEFAULT_SETTINGS, ...docSnap.data() } as Settings;
+      return mergeSettingsWithDefaults(docSnap.data());
     } else {
       // Return defaults and attempt bootstrap (will fail but caught)
       setDoc(docRef, DEFAULT_SETTINGS).catch(e => console.warn('Bootstrap settings failed:', e));

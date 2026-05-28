@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ChevronLeft, MessageCircle, MapPin, Video, 
@@ -18,49 +18,49 @@ import { Settings, Local, Booking } from '../types';
 const PLANS_PRESENCIAL = [
   { 
     id: 'trimestral',
-    name: 'Trimestral', 
+    name: 'Plano Recomeço', 
     tag: 'Presencial · 3 meses',
-    price: '3x de R$300,00 sem juros',
-    vista: 'ou R$900,00 à vista',
+    price: '3x de R$275,00 sem juros',
+    vista: 'ou R$825,00 à vista',
     features: [
-      '3 consultas presenciais (1/mês)',
+      '3 consultas presenciais (1 por mês)',
       'Avaliação física em todas as consultas',
       'Plano alimentar personalizado com ajustes mensais',
-      'Suporte via WhatsApp',
-      'Análise de exames (quando necessário)',
-      'Material de apoio (orientações práticas)'
+      'Suporte via WhatsApp durante o acompanhamento',
+      'Análise de exames quando necessário',
+      'Materiais de apoio com orientações práticas para sua rotina'
     ]
   },
   { 
     id: 'semestral',
-    name: 'Semestral', 
+    name: 'Plano Mudança', 
     tag: 'Presencial · 6 meses',
-    price: '6x de R$290,00 sem juros',
-    vista: 'ou R$1.740,00 à vista',
+    price: '6x de R$270,00 sem juros',
+    vista: 'ou R$1.620,00 à vista',
     popular: true,
     badge: 'Mais popular',
     features: [
-      '6 consultas presenciais (1/mês)',
+      '6 consultas presenciais (1 por mês)',
       'Avaliação física mensal',
       'Plano alimentar com ajustes contínuos',
-      'Suporte via WhatsApp com acompanhamento mais próximo',
-      'Análise de exames (quando necessário)',
-      'Materiais de apoio (receitas e orientações práticas)'
+      'Acompanhamento mais próximo via WhatsApp',
+      'Análise de exames quando necessário',
+      'Materiais de apoio, receitas e orientações práticas'
     ]
   },
   { 
     id: 'anual',
-    name: 'Anual', 
+    name: 'Plano Transformação', 
     tag: 'Presencial · 12 meses',
-    price: '12x de R$280,00 sem juros',
-    vista: 'ou R$3.360,00 à vista',
+    price: '12x de R$250,00 sem juros',
+    vista: 'ou R$3.000,00 à vista',
     features: [
-      '12 consultas presenciais (1/mês)',
+      '12 consultas presenciais (1 por mês)',
       'Avaliação física completa e acompanhamento contínuo',
-      'Plano alimentar sempre atualizado',
+      'Plano alimentar sempre atualizado conforme sua evolução',
       'Suporte prioritário via WhatsApp',
-      'Análise de exames + estratégia nutricional completa',
-      'Materiais completos de apoio'
+      'Análise de exames com estratégia nutricional individualizada',
+      'Materiais completos de apoio ao longo do processo'
     ]
   }
 ];
@@ -68,47 +68,47 @@ const PLANS_PRESENCIAL = [
 const PLANS_ONLINE = [
   { 
     id: 'trimestral',
-    name: 'Trimestral', 
+    name: 'Plano Recomeço', 
     tag: 'Online · 3 meses',
-    price: '3x de R$250,00 sem juros',
-    vista: 'ou R$750,00 à vista',
+    price: '3x de R$185,00 sem juros',
+    vista: 'ou R$555,00 à vista',
     features: [
-      '3 consultas online (1/mês)',
+      '3 consultas online (1 por mês)',
       'Plano alimentar personalizado com ajustes mensais',
-      'Suporte via WhatsApp contínuo',
-      'Análise de exames (quando necessário) e Ajuste correspondente',
-      'Ajustes adicionais de receitas e plano alimentar',
-      'Material de apoio focado na sua rotina de metas'
+      'Suporte contínuo via WhatsApp',
+      'Análise de exames e ajustes nutricionais quando necessário',
+      'Adaptações de receitas e do plano alimentar ao longo do acompanhamento',
+      'Materiais de apoio alinhados à sua rotina e objetivos'
     ]
   },
   { 
     id: 'semestral',
-    name: 'Semestral', 
+    name: 'Plano Mudança', 
     tag: 'Online · 6 meses',
-    price: '6x de R$240,00 sem juros',
-    vista: 'ou R$1.440,00 à vista',
+    price: '6x de R$180,00 sem juros',
+    vista: 'ou R$1.080,00 à vista',
     popular: true,
     badge: 'Mais popular',
     features: [
-      '6 consultas online (1/mês)',
+      '6 consultas online (1 por mês)',
       'Plano alimentar com ajustes contínuos',
-      'Suporte via WhatsApp com acompanhamento mais próximo',
-      'Análise de exames (quando necessário)',
-      'Materiais de apoio'
+      'Acompanhamento mais próximo via WhatsApp',
+      'Análise de exames quando necessário',
+      'Materiais de apoio para facilitar sua rotina alimentar'
     ]
   },
   { 
     id: 'anual',
-    name: 'Anual', 
+    name: 'Plano Transformação', 
     tag: 'Online · 12 meses',
-    price: '12x de R$230,00 sem juros',
-    vista: 'ou R$2.760,00 à vista',
+    price: '12x de R$170,00 sem juros',
+    vista: 'ou R$2.040,00 à vista',
     features: [
-      '12 consultas online (1/mês)',
-      'Plano alimentar sempre atualizado',
+      '12 consultas online (1 por mês)',
+      'Plano alimentar sempre atualizado conforme sua evolução',
       'Suporte prioritário via WhatsApp',
-      'Análise de exames + estratégia nutricional',
-      'Materiais completos de apoio'
+      'Análise de exames com estratégia nutricional individualizada',
+      'Materiais completos de apoio e acompanhamento contínuo'
     ]
   }
 ];
@@ -141,6 +141,71 @@ const INDIVIDUAL_CONSULTATION = {
   }
 };
 
+function getCleanInstallment(priceStr: string) {
+  if (!priceStr) return '';
+  const parts = priceStr.split(/(?:\s+no\s*cart|\s*sem\s*juros|\s+NO\s+CARTÃO|\s*no\s+cartão)/i);
+  return parts[0].trim();
+}
+
+function getStartingFrom(consultations: any[] | undefined, type: 'online' | 'presencial') {
+  if (!consultations || consultations.length === 0) {
+    return type === 'online' ? '2x de R$74,00' : '2x de R$125,00';
+  }
+  const first = consultations[0];
+  return getCleanInstallment(first.priceInstallments);
+}
+
+function formatInstallments(priceStr: string) {
+  if (!priceStr) return '';
+  
+  const splitIndex = priceStr.search(/(?:\s+no\s*cart|\s*sem\s+juros|\s+NO\s+CARTÃO|\s*no\s+cartão)/i);
+  if (splitIndex !== -1) {
+    const mainPrice = priceStr.substring(0, splitIndex).trim();
+    const suffix = priceStr.substring(splitIndex).trim();
+    return (
+      <span className="text-2xl font-black text-brand-salmon block leading-none">
+        {mainPrice} <span className="text-[9px] font-medium text-slate-400 block sm:inline sm:ml-1 tracking-normal uppercase opacity-70">{suffix}</span>
+      </span>
+    );
+  }
+  
+  return (
+    <span className="text-2xl font-black text-brand-salmon block leading-none">
+      {priceStr}
+    </span>
+  );
+}
+
+function SpecialtiesChips() {
+  const specialties = [
+    'Emagrecimento',
+    'Hipertrofia',
+    'Saúde intestinal',
+    'Reeducação alimentar',
+    'Introdução alimentar',
+    'Nutrição infantil',
+    'Seletividade alimentar'
+  ];
+
+  return (
+    <div className="w-full py-4 my-2">
+      <p className="text-[10px] font-black tracking-[0.25em] text-slate-400 uppercase text-center mb-4">
+        Como posso te ajudar
+      </p>
+      <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-3 px-2">
+        {specialties.map((spec, i) => (
+          <span 
+            key={i} 
+            className="px-4 py-1.5 rounded-full border border-primary/25 text-primary text-[10px] font-medium tracking-wider uppercase bg-transparent select-none whitespace-nowrap"
+          >
+            {spec}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [view, setView] = useState<'start' | 'booking' | 'landing'>('landing');
   const [mode, setMode] = useState<'presencial' | 'online' | null>(null);
@@ -162,6 +227,7 @@ export default function Home() {
   const [isBooking, setIsBooking] = useState(false);
   const [lastBookingUrl, setLastBookingUrl] = useState<string | null>(null);
   const [showLocations, setShowLocations] = useState(false);
+  const [selectedPlanIdx, setSelectedPlanIdx] = useState<number>(1);
 
   useEffect(() => {
     async function init() {
@@ -354,6 +420,8 @@ export default function Home() {
                 </div>
               </section>
 
+              <SpecialtiesChips />
+
               {/* Menu Options */}
               <div className="flex flex-col gap-4">
                 <button 
@@ -532,8 +600,8 @@ export default function Home() {
                         )}
                       >
                         Presencial
-                      </button>
-                    </div>
+                       </button>
+                     </div>
                   </div>
                 )}
               </section>
@@ -541,88 +609,100 @@ export default function Home() {
               {/* Consultation Section */}
               <section className="space-y-6">
                 {!mode ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-12">
-                    <button
-                      onClick={() => setMode('online')}
-                      className="group p-10 rounded-[3rem] bg-white border border-slate-100 shadow-sm hover:shadow-2xl hover:scale-[1.02] transition-all flex flex-col items-center gap-6 text-center"
-                    >
-                      <div className="w-20 h-20 rounded-3xl bg-secondary/10 flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-all duration-500 transform group-hover:rotate-6">
-                        <Video className="w-10 h-10" />
-                      </div>
-                      <div className="space-y-2">
-                        <h4 className="text-2xl font-display text-primary uppercase tracking-wide">Consulta Online</h4>
-                        <p className="text-xs text-slate-400 font-medium uppercase tracking-[0.2em]">Google Meet • No conforto de casa</p>
-                      </div>
-                      <div className="px-6 py-2 bg-slate-50 rounded-full text-[9px] font-black uppercase tracking-widest text-slate-400 group-hover:bg-primary group-hover:text-white transition-colors">
-                        Selecionar
-                      </div>
-                    </button>
+                  <div className="grid grid-cols-2 gap-2 sm:gap-6 py-12">
+                     <button
+                       onClick={() => setMode('online')}
+                       className="group p-3 xs:p-5 sm:p-10 rounded-[1.5rem] sm:rounded-[3rem] bg-white border border-slate-100 shadow-sm hover:shadow-2xl hover:scale-[1.02] transition-all flex flex-col items-center gap-3 sm:gap-6 text-center"
+                     >
+                       <div className="w-10 h-10 xs:w-16 xs:h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-secondary/10 flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-all duration-500 transform group-hover:rotate-6">
+                         <Video className="w-5 h-5 xs:w-8 xs:h-8 sm:w-10 sm:h-10" />
+                       </div>
+                       <div className="space-y-1 sm:space-y-2">
+                         <h4 className="text-xs xs:text-sm sm:text-2xl font-display text-primary uppercase tracking-wide leading-tight">Consulta Online</h4>
+                         <p className="text-[7.5px] xs:text-[9.5px] sm:text-xs text-slate-400 font-medium uppercase tracking-[0.05em] sm:tracking-[0.2em] leading-normal">Google Meet • Em casa</p>
+                         <p className="text-[8px] xs:text-[10px] sm:text-xs text-slate-500 font-medium mt-1 sm:mt-2">
+                           A partir de: <strong className="text-brand-salmon font-black text-[9px] xs:text-[11px] sm:text-sm block mt-0.5">{getStartingFrom(settings?.onlineConsultations, 'online')}</strong>
+                         </p>
+                       </div>
+                       <div className="px-2 py-1 sm:px-6 sm:py-2 bg-slate-50 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 group-hover:bg-primary group-hover:text-white transition-colors">
+                         Selecionar
+                       </div>
+                     </button>
 
-                    <button
-                      onClick={() => setMode('presencial')}
-                      className="group p-10 rounded-[3rem] bg-white border border-slate-100 shadow-sm hover:shadow-2xl hover:scale-[1.02] transition-all flex flex-col items-center gap-6 text-center"
-                    >
-                      <div className="w-20 h-20 rounded-3xl bg-accent/10 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-white transition-all duration-500 transform group-hover:-rotate-6">
-                        <MapPin className="w-10 h-10" />
-                      </div>
-                      <div className="space-y-2">
-                        <h4 className="text-2xl font-display text-primary uppercase tracking-wide">Consulta Presencial</h4>
-                        <p className="text-xs text-slate-400 font-medium uppercase tracking-[0.2em]">No Consultório • Atendimento Físico</p>
-                      </div>
-                      <div className="px-6 py-2 bg-slate-50 rounded-full text-[9px] font-black uppercase tracking-widest text-slate-400 group-hover:bg-primary group-hover:text-white transition-colors">
-                        Selecionar
-                      </div>
-                    </button>
-                  </div>
-                ) : (
+                     <button
+                       onClick={() => setMode('presencial')}
+                       className="group p-3 xs:p-5 sm:p-10 rounded-[1.5rem] sm:rounded-[3rem] bg-white border border-slate-100 shadow-sm hover:shadow-2xl hover:scale-[1.02] transition-all flex flex-col items-center gap-3 sm:gap-6 text-center"
+                     >
+                       <div className="w-10 h-10 xs:w-16 xs:h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-accent/10 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-white transition-all duration-500 transform group-hover:-rotate-6">
+                         <MapPin className="w-5 h-5 xs:w-8 xs:h-8 sm:w-10 sm:h-10" />
+                       </div>
+                       <div className="space-y-1 sm:space-y-2">
+                         <h4 className="text-xs xs:text-sm sm:text-2xl font-display text-primary uppercase tracking-wide leading-tight">Consulta Presencial</h4>
+                         <p className="text-[7.5px] xs:text-[9.5px] sm:text-xs text-slate-400 font-medium uppercase tracking-[0.05em] sm:tracking-[0.2em] leading-normal">No Consultório</p>
+                         <p className="text-[8px] xs:text-[10px] sm:text-xs text-slate-500 font-medium mt-1 sm:mt-2">
+                           A partir de: <strong className="text-brand-salmon font-black text-[9px] xs:text-[11px] sm:text-sm block mt-0.5">{getStartingFrom(settings?.presencialConsultations, 'presencial')}</strong>
+                         </p>
+                       </div>
+                       <div className="px-2 py-1 sm:px-6 sm:py-2 bg-slate-50 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 group-hover:bg-primary group-hover:text-white transition-colors">
+                         Selecionar
+                       </div>
+                     </button>
+                   </div>
+                 ) : (
                   <>
                     <div className="flex items-center justify-between px-2">
-                      <h2 className="font-display text-3xl text-primary font-medium tracking-tight">Consulta Avulsa</h2>
+                      <h2 className="font-display text-3xl text-primary font-medium tracking-tight">Escolha o Tipo de Consulta</h2>
                       <div className="h-px bg-slate-200 flex-1 ml-6 bg-gradient-to-r from-slate-200 to-transparent" />
                     </div>
                     
-                    <div 
-                      className="w-full text-left bg-white border border-slate-100 rounded-[3rem] p-8 md:p-12 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-12"
-                    >
-                      <div className="space-y-8 flex-1">
-                        <div className="space-y-4">
-                          <div className="flex items-center gap-3">
-                            <div className="p-3 bg-primary/5 rounded-2xl text-primary">
-                              <Stethoscope className="w-6 h-6" />
-                            </div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">
-                              {currentConsultation?.tag}
-                            </span>
-                          </div>
-                          <h3 className="text-4xl font-display text-primary leading-tight font-medium">{currentConsultation?.title}</h3>
-                        </div>
-
-                        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
-                          {currentConsultation?.features.map((f, i) => (
-                            <li key={i} className="flex items-start gap-3">
-                               <div className="w-1.5 h-1.5 rounded-full bg-brand-salmon mt-1.5 shrink-0" />
-                               <span className="text-sm text-slate-500 font-light leading-snug">{f}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div className="flex flex-col items-end gap-2 shrink-0 pt-8 md:pt-0 border-t md:border-t-0 border-slate-50 w-full md:w-auto">
-                        <div className="text-right">
-                          <span className="text-4xl font-black text-brand-salmon block leading-none">
-                            {currentConsultation?.price.split(' — ')[0]}
-                          </span>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-2 block">
-                            {currentConsultation?.price.split(' — ')[1]}
-                          </span>
-                        </div>
-                        <button 
-                          onClick={() => handleStartBooking()}
-                          className="mt-6 w-full md:w-auto flex items-center justify-center gap-3 py-5 px-10 bg-primary text-white rounded-full font-bold text-xs uppercase tracking-widest hover:bg-accent transition-colors shadow-xl shadow-primary/10"
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      {(mode === 'online' 
+                        ? (settings?.onlineConsultations || []) 
+                        : (settings?.presencialConsultations || [])
+                      ).map((cons) => (
+                        <div 
+                          key={cons.id}
+                          className="w-full text-left bg-white border border-slate-100 rounded-[3rem] p-8 md:p-10 shadow-sm flex flex-col justify-between gap-8 hover:shadow-xl transition-all duration-300"
                         >
-                          Agendar consulta ↗
-                        </button>
-                      </div>
+                          <div className="space-y-6 flex-1">
+                            <div className="space-y-4">
+                              <div className="flex items-center gap-3">
+                                <div className="p-3 bg-primary/5 rounded-2xl text-primary">
+                                  <Stethoscope className="w-6 h-6" />
+                                </div>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                                  {cons.tag}
+                                </span>
+                              </div>
+                              <h3 className="text-3xl font-display text-primary leading-tight font-medium">{cons.title}</h3>
+                            </div>
+
+                            <ul className="space-y-3">
+                              {cons.features.map((f, i) => (
+                                <li key={i} className="flex items-start gap-3">
+                                   <div className="w-1.5 h-1.5 rounded-full bg-brand-salmon mt-1.5 shrink-0" />
+                                   <span className="text-sm text-slate-500 font-light leading-snug">{f}</span>
+                                 </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          <div className="pt-6 border-t border-slate-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                            <div>
+                              {formatInstallments(cons.priceInstallments)}
+                              <span className="text-sm font-black uppercase text-slate-600 mt-1.5 block">
+                                {cons.priceCash}
+                              </span>
+                            </div>
+                            <button 
+                              onClick={() => handleStartBooking({ ...cons, name: cons.title })}
+                              className="flex items-center justify-center gap-3 py-4 px-8 bg-primary text-white rounded-full font-bold text-xs uppercase tracking-widest hover:bg-accent transition-colors shadow-lg shadow-primary/10"
+                            >
+                              Agendar consulta ↗
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </>
                 )}
@@ -636,61 +716,89 @@ export default function Home() {
                     <div className="h-px bg-slate-200 flex-1 ml-6 bg-gradient-to-r from-slate-200 to-transparent" />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {currentPlans.map((plan) => (
-                      <div 
-                        key={plan.id}
-                        className={cn(
-                          "flex flex-col text-left bg-white p-10 rounded-[3rem] border transition-all relative",
-                          plan.popular ? "border-brand-salmon shadow-2xl scale-[1.02] z-10" : "border-slate-100 shadow-sm"
-                        )}
-                      >
-                        {plan.popular && (
-                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-brand-salmon text-white text-[9px] font-black uppercase tracking-[0.2em] rounded-full shadow-lg">
-                            {plan.badge}
-                          </div>
-                        )}
-                        
-                        <div className="flex-1 space-y-8">
-                          <div className="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary">
-                            <Sparkles className="w-6 h-6" />
-                          </div>
+                  <div className="flex md:grid md:grid-cols-3 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-none gap-4 md:gap-8 pb-6 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0">
+                    {currentPlans.map((plan, idx) => {
+                      const isSelected = selectedPlanIdx === idx;
+                      return (
+                        <div 
+                          key={plan.id}
+                          onClick={() => setSelectedPlanIdx(idx)}
+                          className={cn(
+                            "flex flex-col text-left bg-white p-8 sm:p-10 rounded-[2rem] sm:rounded-[3rem] border transition-all duration-500 relative shrink-0 w-[82vw] sm:w-[320px] md:w-auto snap-center cursor-pointer",
+                            isSelected 
+                              ? "border-brand-salmon shadow-2xl scale-[1.02] md:scale-[1.02] z-10 opacity-100 ring-2 ring-brand-salmon/20" 
+                              : "border-slate-100 shadow-sm opacity-50 md:opacity-100 scale-95 md:scale-100 hover:opacity-100"
+                          )}
+                        >
+                          {plan.popular && (
+                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-brand-salmon text-white text-[9px] font-black uppercase tracking-[0.2em] rounded-full shadow-lg">
+                              {plan.badge}
+                            </div>
+                          )}
                           
-                          <div>
-                            <h3 className="text-3xl font-display text-primary font-medium leading-none">{plan.name}</h3>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-3 opacity-60">{plan.tag}</p>
+                          <div className="flex-1 space-y-8">
+                            <div className="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary">
+                              <Sparkles className="w-6 h-6" />
+                            </div>
+                            
+                            <div>
+                              <h3 className="text-3xl font-display text-primary font-medium leading-none">{plan.name}</h3>
+                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-3 opacity-60">{plan.tag}</p>
+                            </div>
+
+                            <ul className="space-y-4">
+                              {plan.features.map((f, i) => (
+                                <li key={i} className="flex items-start gap-4">
+                                  <Check className="w-4 h-4 text-accent mt-0.5 shrink-0" />
+                                  <span className="text-xs text-slate-500 font-light leading-tight">{f}</span>
+                                </li>
+                              ))}
+                            </ul>
                           </div>
 
-                          <ul className="space-y-4">
-                            {plan.features.map((f, i) => (
-                              <li key={i} className="flex items-start gap-4">
-                                <Check className="w-4 h-4 text-accent mt-0.5 shrink-0" />
-                                <span className="text-xs text-slate-500 font-light leading-tight">{f}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        <div className="pt-10 border-t border-slate-50 mt-10 space-y-6">
-                          <div>
-                            <p className="text-3xl font-black text-brand-salmon leading-none">
-                              {plan.price.split(' sem juros')[0]}
-                            </p>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-300 mt-2">
-                              {plan.price.split(' sem juros')[1] || 'sem juros'} • {plan.vista}
-                            </p>
+                          <div className="pt-10 border-t border-slate-50 mt-10 space-y-6">
+                            <div>
+                              <p className="text-3xl font-black text-brand-salmon leading-none flex items-baseline flex-wrap">
+                                {plan.price.split(' sem juros')[0]}
+                                {plan.price.toLowerCase().includes('sem juros') && (
+                                  <span className="text-[9px] font-medium text-slate-400 uppercase tracking-normal ml-1.5 opacity-70">
+                                    sem juros
+                                  </span>
+                                )}
+                              </p>
+                              <span className="text-sm font-black uppercase text-slate-600 mt-1.5 block">
+                                {plan.vista}
+                              </span>
+                            </div>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStartBooking(plan);
+                              }}
+                              className={cn(
+                                 "w-full py-5 rounded-2xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm",
+                                 (plan.popular || isSelected) ? "bg-primary text-white shadow-primary/20" : "bg-slate-50 text-slate-400 hover:bg-primary hover:text-white"
+                              )}
+                            >
+                              Quero este plano ↗
+                            </button>
                           </div>
-                          <button 
-                            onClick={() => handleStartBooking(plan)}
-                            className={cn(
-                               "w-full py-5 rounded-2xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm",
-                               plan.popular ? "bg-primary text-white shadow-primary/20" : "bg-slate-50 text-slate-400 hover:bg-primary hover:text-white"
-                            )}
-                          >
-                            Quero este plano ↗
-                          </button>
                         </div>
-                      </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Indicators for mobile view */}
+                  <div className="flex justify-center gap-1.5 mt-2 md:hidden">
+                    {currentPlans.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setSelectedPlanIdx(idx)}
+                        className={cn(
+                          "w-2 h-2 rounded-full transition-all duration-300",
+                          selectedPlanIdx === idx ? "bg-brand-salmon w-6" : "bg-slate-200"
+                        )}
+                      />
                     ))}
                   </div>
                 </section>

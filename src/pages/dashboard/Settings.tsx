@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Save, Image as ImageIcon, MessageCircle, MapPin, 
   Calendar, Clock, Trash2, Plus, Sparkles, User,
-  ChevronRight, ArrowLeft, Camera, Lock, Upload
+  ChevronRight, ArrowLeft, Camera, Lock, Upload, DollarSign
 } from 'lucide-react';
 import { 
   fetchSettings, fetchLocais, fetchHorarios, 
-  updateSheetData 
+  updateSheetData, mergeSettingsWithDefaults
 } from '../../lib/googleWorkspace';
 import { Settings, Local } from '../../types';
 import { cn } from '../../lib/utils';
@@ -23,7 +23,7 @@ export default function SettingsPage() {
   const [locais, setLocais] = useState<Local[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'perfil' | 'background' | 'clinicas' | 'horarios' | 'contato'>('perfil');
+  const [activeTab, setActiveTab] = useState<'perfil' | 'background' | 'clinicas' | 'horarios' | 'contato' | 'servicos'>('perfil');
 
   // AI Background state
   const [refImages, setRefImages] = useState<string[]>([]);
@@ -32,7 +32,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const unsubSettings = subscribeToDocument<Settings>('config', 'settings', (data) => {
-      if (data) setSettings(data);
+      if (data) setSettings(mergeSettingsWithDefaults(data));
       setLoading(false);
     });
 
@@ -138,6 +138,7 @@ export default function SettingsPage() {
              { id: 'clinicas', label: 'Clínicas', icon: MapPin },
              { id: 'horarios', label: 'Agenda', icon: Calendar },
              { id: 'contato', label: 'Contato', icon: MessageCircle },
+             { id: 'servicos', label: 'Serviços / Preços', icon: DollarSign },
            ].map(t => (
              <button 
                key={t.id}
@@ -489,6 +490,275 @@ export default function SettingsPage() {
               </div>
            </div>
         )}
+         {activeTab === 'servicos' && settings && (
+            <div className="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-sm space-y-12 animate-in fade-in duration-200">
+               <div>
+                  <h2 className="text-2xl font-black text-dark">Serviços e Preços das Consultas</h2>
+                  <p className="text-slate-500 mt-2 font-light">Você pode personalizar os preços, descrições e títulos que aparecem para as consultas Online e Presenciais.</p>
+               </div>
+               
+               {/* Online Consultations Section */}
+               <div className="space-y-6">
+                  <div className="flex items-center justify-between border-b border-slate-105 pb-4">
+                     <h3 className="text-lg font-bold text-primary flex items-center gap-2">
+                        <span className="px-3 py-1 bg-primary/10 rounded-full text-primary font-black text-xs uppercase tracking-wider">Online</span>
+                        Consultas Online
+                     </h3>
+                     <button
+                       type="button"
+                       onClick={() => {
+                         const newList = [...(settings.onlineConsultations || [])];
+                         newList.push({
+                           id: 'online-' + Math.random().toString(36).substr(2, 5),
+                           title: 'Nova Consulta Online',
+                           tag: 'Online · via videochamada',
+                           priceInstallments: '2x de R$90,00',
+                           priceCash: 'ou R$180,00 à vista',
+                           features: ['Consulta individual (60 minutos)', 'Plano alimentar personalizado']
+                         });
+                         setSettings({ ...settings, onlineConsultations: newList });
+                       }}
+                       className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary font-bold text-xs rounded-xl hover:bg-primary hover:text-white transition-all"
+                     >
+                        <Plus className="w-4 h-4" /> Adicionar Opção
+                     </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6">
+                     {(settings.onlineConsultations || []).map((cons, index) => (
+                       <div key={cons.id} className="p-8 bg-slate-50/70 rounded-3xl border border-slate-100 relative space-y-6 shadow-sm">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newList = (settings.onlineConsultations || []).filter((_, i) => i !== index);
+                              setSettings({ ...settings, onlineConsultations: newList });
+                            }}
+                            className="absolute top-6 right-6 p-2 text-slate-300 hover:text-red-500 transition-colors"
+                            title="Excluir Opção"
+                          >
+                             <Trash2 className="w-5 h-5" />
+                          </button>
+
+                          <p className="text-[10px] font-black uppercase text-primary tracking-widest leading-none">Opção #{index + 1}</p>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Título da Consulta</label>
+                                <input
+                                  type="text"
+                                  value={cons.title}
+                                  onChange={(e) => {
+                                    const newList = [...(settings.onlineConsultations || [])];
+                                    newList[index] = { ...newList[index], title: e.target.value };
+                                    setSettings({ ...settings, onlineConsultations: newList });
+                                  }}
+                                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none text-sm font-semibold text-slate-700 font-sans"
+                                  placeholder="Ex: Consulta Avulsa"
+                                />
+                             </div>
+                             <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Marcador / Tag Superior</label>
+                                <input
+                                  type="text"
+                                  value={cons.tag}
+                                  onChange={(e) => {
+                                    const newList = [...(settings.onlineConsultations || [])];
+                                    newList[index] = { ...newList[index], tag: e.target.value };
+                                    setSettings({ ...settings, onlineConsultations: newList });
+                                  }}
+                                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none text-sm font-semibold text-slate-700 font-sans"
+                                />
+                             </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-sans">Preço parcelado / Destaque</label>
+                                <input
+                                  type="text"
+                                  value={cons.priceInstallments}
+                                  onChange={(e) => {
+                                    const newList = [...(settings.onlineConsultations || [])];
+                                    newList[index] = { ...newList[index], priceInstallments: e.target.value };
+                                    setSettings({ ...settings, onlineConsultations: newList });
+                                  }}
+                                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none text-sm font-bold text-brand-salmon font-sans"
+                                  placeholder="Ex: 2X DE R$90,00 NO CARTÃO"
+                                />
+                             </div>
+                             <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-sans">Preço à vista / Complementar</label>
+                                <input
+                                  type="text"
+                                  value={cons.priceCash}
+                                  onChange={(e) => {
+                                    const newList = [...(settings.onlineConsultations || [])];
+                                    newList[index] = { ...newList[index], priceCash: e.target.value };
+                                    setSettings({ ...settings, onlineConsultations: newList });
+                                  }}
+                                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none text-sm font-semibold text-slate-700 font-sans"
+                                  placeholder="Ex: ou R$190,00 à vista"
+                                />
+                             </div>
+                          </div>
+
+                          <div className="space-y-1">
+                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Descrições / Vantagens (Uma por linha)</label>
+                             <textarea
+                               value={cons.features.join('\n')}
+                               onChange={(e) => {
+                                 const newList = [...(settings.onlineConsultations || [])];
+                                 newList[index] = { ...newList[index], features: e.target.value.split('\n').filter(line => line.trim() !== '') };
+                                 setSettings({ ...settings, onlineConsultations: newList });
+                               }}
+                               rows={4}
+                               className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none text-xs text-slate-600 font-sans leading-relaxed"
+                               placeholder="Ex: Consulta individual (60 minutos)&#10;Plano Alimentar personalizado"
+                             />
+                          </div>
+                       </div>
+                     ))}
+                  </div>
+               </div>
+
+               {/* Presencial Consultations Section */}
+               <div className="space-y-6 pt-6">
+                  <div className="flex items-center justify-between border-b border-slate-105 pb-4">
+                     <h3 className="text-lg font-bold text-primary flex items-center gap-2">
+                        <span className="px-3 py-1 bg-primary/10 rounded-full text-primary font-black text-xs uppercase tracking-wider">Presencial</span>
+                        Consultas Presenciais
+                     </h3>
+                     <button
+                       type="button"
+                       onClick={() => {
+                         const newList = [...(settings.presencialConsultations || [])];
+                         newList.push({
+                           id: 'presencial-' + Math.random().toString(36).substr(2, 5),
+                           title: 'Nova Consulta Presencial',
+                           tag: 'Presencial · no consultório',
+                           priceInstallments: '2x de R$110,00',
+                           priceCash: 'ou R$220,00 à vista',
+                           features: ['Consulta individual (60 minutos)', 'Plano alimentar personalizado']
+                         });
+                         setSettings({ ...settings, presencialConsultations: newList });
+                       }}
+                       className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary font-bold text-xs rounded-xl hover:bg-primary hover:text-white transition-all"
+                     >
+                        <Plus className="w-4 h-4" /> Adicionar Opção
+                     </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6">
+                     {(settings.presencialConsultations || []).map((cons, index) => (
+                       <div key={cons.id} className="p-8 bg-slate-50/70 rounded-3xl border border-slate-100 relative space-y-6 shadow-sm">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newList = (settings.presencialConsultations || []).filter((_, i) => i !== index);
+                              setSettings({ ...settings, presencialConsultations: newList });
+                            }}
+                            className="absolute top-6 right-6 p-2 text-slate-300 hover:text-red-500 transition-colors"
+                            title="Excluir Opção"
+                          >
+                             <Trash2 className="w-5 h-5" />
+                          </button>
+
+                          <p className="text-[10px] font-black uppercase text-primary tracking-widest leading-none">Opção #{index + 1}</p>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Título da Consulta</label>
+                                <input
+                                  type="text"
+                                  value={cons.title}
+                                  onChange={(e) => {
+                                    const newList = [...(settings.presencialConsultations || [])];
+                                    newList[index] = { ...newList[index], title: e.target.value };
+                                    setSettings({ ...settings, presencialConsultations: newList });
+                                  }}
+                                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none text-sm font-semibold text-slate-700 font-sans"
+                                  placeholder="Ex: Consulta Avulsa"
+                                />
+                             </div>
+                             <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Marcador / Tag Superior</label>
+                                <input
+                                  type="text"
+                                  value={cons.tag}
+                                  onChange={(e) => {
+                                    const newList = [...(settings.presencialConsultations || [])];
+                                    newList[index] = { ...newList[index], tag: e.target.value };
+                                    setSettings({ ...settings, presencialConsultations: newList });
+                                  }}
+                                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none text-sm font-semibold text-slate-700 font-sans"
+                                />
+                             </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-sans">Preço parcelado / Destaque</label>
+                                <input
+                                  type="text"
+                                  value={cons.priceInstallments}
+                                  onChange={(e) => {
+                                    const newList = [...(settings.presencialConsultations || [])];
+                                    newList[index] = { ...newList[index], priceInstallments: e.target.value };
+                                    setSettings({ ...settings, presencialConsultations: newList });
+                                  }}
+                                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none text-sm font-bold text-brand-salmon font-sans"
+                                  placeholder="Ex: 2x de R$110,00"
+                                />
+                             </div>
+                             <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-sans">Preço à vista / Complementar</label>
+                                <input
+                                  type="text"
+                                  value={cons.priceCash}
+                                  onChange={(e) => {
+                                    const newList = [...(settings.presencialConsultations || [])];
+                                    newList[index] = { ...newList[index], priceCash: e.target.value };
+                                    setSettings({ ...settings, presencialConsultations: newList });
+                                  }}
+                                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none text-sm font-semibold text-slate-700 font-sans"
+                                  placeholder="Ex: ou R$220,00 à vista"
+                                />
+                             </div>
+                          </div>
+
+                          <div className="space-y-1">
+                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Descrições / Vantagens (Uma por linha)</label>
+                             <textarea
+                               value={cons.features.join('\n')}
+                               onChange={(e) => {
+                                 const newList = [...(settings.presencialConsultations || [])];
+                                 newList[index] = { ...newList[index], features: e.target.value.split('\n').filter(line => line.trim() !== '') };
+                                 setSettings({ ...settings, presencialConsultations: newList });
+                               }}
+                               rows={4}
+                               className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none text-xs text-slate-600 font-sans leading-relaxed"
+                               placeholder="Ex: Consulta individual (60 minutos)&#10;Plano Alimentar personalizado"
+                             />
+                          </div>
+                       </div>
+                     ))}
+                  </div>
+               </div>
+
+               {/* Save Button */}
+               <button
+                 onClick={() => handleSaveSettings()}
+                 disabled={saving}
+                 className="w-full py-5 bg-primary text-white rounded-3xl font-bold uppercase tracking-widest flex items-center justify-center gap-3 disabled:opacity-50 hover:bg-opacity-95 transition-all shadow-xl shadow-primary/20"
+               >
+                 {saving ? (
+                   <>Salvando... <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /></>
+                 ) : (
+                   'Salvar Serviços e Preços'
+                 )}
+               </button>
+            </div>
+         )}
       </div>
     </div>
   );

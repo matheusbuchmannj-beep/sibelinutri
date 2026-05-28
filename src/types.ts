@@ -148,4 +148,20 @@ export interface Settings {
   plansTitle: string;
   plansSubtitle: string;
   allowedAdminEmails?: string[];
+  onlineConsultations?: Array<{
+    id: string;
+    title: string;
+    tag: string;
+    priceInstallments: string;
+    priceCash: string;
+    features: string[];
+  }>;
+  presencialConsultations?: Array<{
+    id: string;
+    title: string;
+    tag: string;
+    priceInstallments: string;
+    priceCash: string;
+    features: string[];
+  }>;
 }
