@@ -176,7 +176,8 @@ function formatInstallments(priceStr: string) {
   );
 }
 
-function SpecialtiesChips() {
+function SpecialtiesModal() {
+  const [isOpen, setIsOpen] = useState(false);
   const specialties = [
     'Emagrecimento',
     'Hipertrofia',
@@ -188,20 +189,61 @@ function SpecialtiesChips() {
   ];
 
   return (
-    <div className="w-full py-4 my-2">
-      <p className="text-[10px] font-black tracking-[0.25em] text-slate-400 uppercase text-center mb-4">
-        Como posso te ajudar
-      </p>
-      <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-3 px-2">
-        {specialties.map((spec, i) => (
-          <span 
-            key={i} 
-            className="px-4 py-1.5 rounded-full border border-primary/25 text-primary text-[10px] font-medium tracking-wider uppercase bg-transparent select-none whitespace-nowrap"
-          >
-            {spec}
-          </span>
-        ))}
-      </div>
+    <div className="w-full flex justify-center py-2 my-1">
+      <button 
+        onClick={() => setIsOpen(true)}
+        className="px-6 py-2.5 rounded-full border border-primary/20 text-primary hover:border-primary/[0.45] text-[10px] font-bold uppercase tracking-[0.25em] bg-transparent cursor-pointer transition-all duration-300 hover:text-brand-salmon/90 select-none"
+      >
+        Áreas de atendimento
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop with a soft, clean blur */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="absolute inset-0 bg-primary/20 backdrop-blur-[3px]"
+            />
+
+            {/* Modal Box */}
+            <motion.div 
+              initial={{ opacity: 0, y: 15, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 15, scale: 0.98 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="relative w-full max-w-sm bg-white px-8 py-10 rounded-[2rem] border border-slate-100/80 shadow-xl flex flex-col items-center text-center space-y-8 z-10"
+            >
+              <div className="space-y-2">
+                <span className="text-[9px] font-black tracking-[0.3em] text-slate-400 uppercase block">Como posso te ajudar</span>
+                <h3 className="font-display text-2xl text-primary font-medium tracking-normal">Áreas de Atendimento</h3>
+              </div>
+
+              {/* List of Specialties with elegant bullets */}
+              <div className="w-full space-y-4 py-4 border-y border-slate-100/50 flex flex-col items-center">
+                {specialties.map((spec, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary/30 shrink-0" />
+                    <span className="font-sans text-xs text-slate-600 font-medium tracking-wide uppercase">
+                      {spec}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <button 
+                onClick={() => setIsOpen(false)}
+                className="px-6 py-2 rounded-full border border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300 text-[9px] font-bold uppercase tracking-widest transition-all cursor-pointer"
+              >
+                Voltar
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -420,7 +462,7 @@ export default function Home() {
                 </div>
               </section>
 
-              <SpecialtiesChips />
+              <SpecialtiesModal />
 
               {/* Menu Options */}
               <div className="flex flex-col gap-4">
@@ -467,15 +509,15 @@ export default function Home() {
                     }}
                     className="overflow-hidden bg-white border border-slate-100 border-t-0 rounded-b-[2rem] shadow-md"
                   >
-                    <div className="p-2 space-y-1">
+                    <div className="p-2 space-y-1 text-center">
                       <a 
                         href="https://www.google.com/maps/search/?api=1&query=R.+Jaragu%C3%A1,+604+-+Am%C3%A9rica,+Joinville+-+SC,+89204-650"
                         target="_blank"
                         rel="noreferrer"
-                        className="flex flex-col gap-1 p-4 hover:bg-primary/5 rounded-2xl transition-colors group"
+                        className="flex flex-col items-center justify-center gap-1.5 p-4 hover:bg-primary/5 rounded-2xl transition-all duration-300 group hover:scale-[1.01]"
                       >
-                        <span className="font-display text-lg text-primary leading-none group-hover:translate-x-1 transition-transform text-left">Up2You Clinical (América)</span>
-                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider text-left">R. Jaraguá, 604 - Joinville</span>
+                        <span className="font-display text-lg text-primary leading-none transition-transform text-center">Up2You Clinical (América)</span>
+                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider text-center">R. Jaraguá, 604 - Joinville</span>
                       </a>
                       
                       <div className="h-px bg-slate-50 mx-4" />
@@ -484,10 +526,10 @@ export default function Home() {
                         href="https://maps.app.goo.gl/rzxfaE9X3kbccFu88"
                         target="_blank"
                         rel="noreferrer"
-                        className="flex flex-col gap-1 p-4 hover:bg-primary/5 rounded-2xl transition-colors group"
+                        className="flex flex-col items-center justify-center gap-1.5 p-4 hover:bg-primary/5 rounded-2xl transition-all duration-300 group hover:scale-[1.01]"
                       >
-                        <span className="font-display text-lg text-primary leading-none group-hover:translate-x-1 transition-transform text-left">Ânima Movimento e Bem Estar (Aventureiro)</span>
-                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider text-left">Rua: Tuiuti, 2295 - Joinville</span>
+                        <span className="font-display text-lg text-primary leading-none transition-transform text-center">Ânima Movimento e Bem Estar (Aventureiro)</span>
+                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider text-center">Rua: Tuiuti, 2295 - Joinville</span>
                       </a>
 
                       <div className="h-px bg-slate-50 mx-4" />
@@ -496,10 +538,10 @@ export default function Home() {
                         href="https://maps.app.goo.gl/9WikRi2WjTLgs4K1A"
                         target="_blank"
                         rel="noreferrer"
-                        className="flex flex-col gap-1 p-4 hover:bg-primary/5 rounded-2xl transition-colors group"
+                        className="flex flex-col items-center justify-center gap-1.5 p-4 hover:bg-primary/5 rounded-2xl transition-all duration-300 group hover:scale-[1.01]"
                       >
-                        <span className="font-display text-lg text-primary leading-none group-hover:translate-x-1 transition-transform text-left">Sculptée Estética Avançada (Iririú)</span>
-                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider text-left">R. Jorge Augusto Emílio Müller, n° 82 - sala 02 - Joinville</span>
+                        <span className="font-display text-lg text-primary leading-none transition-transform text-center">Sculptée Estética Avançada (Iririú)</span>
+                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider text-center">R. Jorge Augusto Emílio Müller, n° 82 - sala 02 - Joinville</span>
                       </a>
                     </div>
                   </motion.div>
