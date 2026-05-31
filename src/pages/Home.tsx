@@ -180,11 +180,11 @@ function SpecialtiesModal() {
   const [isOpen, setIsOpen] = useState(false);
   const specialties = [
     'Emagrecimento',
-    'Hipertrofia',
-    'Saúde intestinal',
+    'Hipertrofia e ganho de massa muscular',
+    'Saúde da Mulher',
     'Reeducação alimentar',
     'Introdução alimentar',
-    'Nutrição infantil',
+    'Nutrição materno-infantil',
     'Seletividade alimentar'
   ];
 
@@ -538,9 +538,15 @@ export default function Home() {
                         href="https://maps.app.goo.gl/9WikRi2WjTLgs4K1A"
                         target="_blank"
                         rel="noreferrer"
-                        className="flex flex-col items-center justify-center gap-1.5 p-4 hover:bg-primary/5 rounded-2xl transition-all duration-300 group hover:scale-[1.01]"
+                        className="flex flex-col items-center justify-center gap-2.5 p-4 hover:bg-primary/5 rounded-2xl transition-all duration-300 group hover:scale-[1.01]"
                       >
-                        <span className="font-display text-lg text-primary leading-none transition-transform text-center">Sculptée Estética Avançada (Iririú)</span>
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+                          <span className="font-display text-lg text-primary leading-none transition-transform text-center">Sculptée Estética Avançada (Iririú)</span>
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-[#b35036] bg-[#b35036]/10 rounded-full border border-[#b35036]/20">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#b35036] animate-pulse" />
+                            Horários disponíveis
+                          </span>
+                        </div>
                         <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider text-center">R. Jorge Augusto Emílio Müller, n° 82 - sala 02 - Joinville</span>
                       </a>
                     </div>
@@ -895,28 +901,42 @@ export default function Home() {
                       <h2 className="font-display text-3xl text-primary">Onde deseja o atendimento?</h2>
                       <div className="grid grid-cols-1 gap-4">
                         {presencialLocais.map(l => {
+                          const isSculptee = l.name.toLowerCase().includes('sculptée') || l.name.toLowerCase().includes('sculptee');
                           const hasAvailableSlots = localHasAvailableSlots(l.id);
                           return (
                             <button 
                               key={l.id}
                               onClick={() => { 
                                 setSelectedLocal(l); 
-                                if (hasAvailableSlots) {
+                                if (hasAvailableSlots || isSculptee) {
                                   setStep(2); 
                                 } else {
                                   setStep(4); // Skip to form for WhatsApp consultation
                                 }
                               }}
-                              className="w-full p-8 bg-white border border-slate-100 rounded-[3rem] text-left hover:border-primary transition-all flex items-center justify-between group shadow-sm"
+                              className={cn(
+                                "w-full p-8 bg-white border rounded-[3rem] text-left hover:border-primary transition-all flex items-center justify-between group shadow-sm",
+                                isSculptee ? "border-[#b35036]/30 shadow-md ring-2 ring-[#b35036]/5 animate-pulse-subtle" : "border-slate-100"
+                              )}
                             >
                               <div className="flex items-center gap-6">
-                                 <div className="p-4 bg-primary/5 text-primary rounded-2xl group-hover:bg-primary group-hover:text-white transition-colors">
+                                 <div className={cn(
+                                   "p-4 rounded-2xl transition-colors group-hover:text-white",
+                                   isSculptee 
+                                     ? "bg-[#b35036]/5 text-[#b35036] group-hover:bg-[#b35036]" 
+                                     : "bg-primary/5 text-primary group-hover:bg-primary"
+                                 )}>
                                     <MapPin className="w-6 h-6" />
                                  </div>
                                  <div className="space-y-1">
                                   <span className="block font-display text-2xl">{l.name}</span>
                                   <span className="text-xs text-slate-400 font-bold uppercase tracking-widest block">{l.address}</span>
-                                  {hasAvailableSlots ? (
+                                  {isSculptee ? (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold text-[#b35036] bg-[#b35036]/10 rounded-full border border-[#b35036]/20">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-[#b35036] animate-pulse" />
+                                      Horários disponíveis
+                                    </span>
+                                  ) : hasAvailableSlots ? (
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 rounded-full border border-emerald-100">
                                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                       Horários disponíveis
